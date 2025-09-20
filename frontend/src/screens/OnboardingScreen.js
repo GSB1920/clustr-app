@@ -1,3 +1,4 @@
+// src/screens/WelcomeScreen.js
 import React, { useEffect, useRef, useState } from 'react'
 import { 
   View, 
@@ -11,6 +12,26 @@ import { ClustrText, ClustrButton } from '../components/ui'
 
 const { width, height } = Dimensions.get('window')
 
+const features = [
+  {
+    icon: "🔗",
+    title: "Connect",
+    subtitle: "Everything",
+    description: "Bring all your tools and teams together in one unified workspace"
+  },
+  {
+    icon: "📋", 
+    title: "Stay",
+    subtitle: "Organized", 
+    description: "Create smart clusters and watch your productivity soar"
+  },
+  {
+    icon: "👥",
+    title: "Collaborate",
+    subtitle: "Better",
+    description: "Work together in real-time, no matter where you are"
+  }
+]
 
 export const WelcomeScreen = ({ onGetStarted }) => {
   const { colors } = useClustrTheme()
@@ -51,6 +72,13 @@ export const WelcomeScreen = ({ onGetStarted }) => {
         useNativeDriver: true,
       })
     ]).start()
+
+    // Auto-rotate through features
+    const interval = setInterval(() => {
+      setActiveTab(prev => (prev + 1) % features.length)
+    }, 3000)
+
+    return () => clearInterval(interval)
   }, [])
 
   const logoRotation = logoRotateAnim.interpolate({
@@ -190,16 +218,110 @@ export const WelcomeScreen = ({ onGetStarted }) => {
                 fontWeight: '500',
               }}
             >
-              Join {'\n'}
+              Empower yourself with{'\n'}
               <ClustrText style={{ color: colors.primary, fontWeight: '600' }}>
-                Your Favourite
-              </ClustrText> Community
+                quick knowledge
+              </ClustrText> and seamless organization
             </ClustrText>
           </Animated.View>
         </View>
 
         {/* Features Section - Bottom Half */}
         <View style={{ flex: 0.4, justifyContent: 'space-between' }}>
+          
+          {/* Tab Indicators */}
+          <Animated.View 
+            style={{
+              opacity: fadeAnim,
+              flexDirection: 'row',
+              justifyContent: 'center',
+              marginBottom: 20,
+            }}
+          >
+            {features.map((_, index) => (
+              <Pressable
+                key={index}
+                onPress={() => setActiveTab(index)}
+                style={{
+                  width: activeTab === index ? 32 : 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: activeTab === index ? colors.primary : colors.border,
+                  marginHorizontal: 4,
+                  shadowColor: activeTab === index ? colors.primary : 'transparent',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 4,
+                  elevation: activeTab === index ? 3 : 0,
+                }}
+              />
+            ))}
+          </Animated.View>
+
+          {/* Active Feature Display */}
+          <Animated.View 
+            key={activeTab}
+            style={{
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+              alignItems: 'center',
+              paddingHorizontal: 20,
+              marginBottom: 32,
+            }}
+          >
+            {/* Feature Icon */}
+            <View style={{
+              width: 72,
+              height: 72,
+              borderRadius: 20,
+              backgroundColor: colors.primary + '15',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: 16,
+              shadowColor: colors.primary,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.15,
+              shadowRadius: 8,
+              elevation: 4,
+            }}>
+              <ClustrText style={{ fontSize: 32 }}>
+                {features[activeTab].icon}
+              </ClustrText>
+            </View>
+            
+            {/* Feature Title */}
+            <ClustrText 
+              variant="heading"
+              style={{
+                fontSize: 22,
+                fontWeight: '700',
+                color: colors.text,
+                textAlign: 'center',
+                marginBottom: 8,
+              }}
+            >
+              {features[activeTab].title}{' '}
+              <ClustrText style={{ color: colors.primary }}>
+                {features[activeTab].subtitle}
+              </ClustrText>
+            </ClustrText>
+            
+            {/* Feature Description */}
+            <ClustrText 
+              variant="caption"
+              style={{
+                fontSize: 15,
+                color: colors.textSecondary,
+                textAlign: 'center',
+                lineHeight: 22,
+                maxWidth: 280,
+              }}
+            >
+              {features[activeTab].description}
+            </ClustrText>
+          </Animated.View>
+
+          {/* CTA Section */}
           <Animated.View 
             style={{
               opacity: fadeAnim,
