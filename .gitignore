@@ -1,0 +1,130 @@
+# ================================
+# MONOREPO GITIGNORE
+# ================================
+
+# ================================
+# DEPENDENCIES
+# ================================
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ================================
+# FRONTEND (React Native/Expo)
+# ================================
+# Expo
+frontend/.expo/
+frontend/dist/
+frontend/web-build/
+frontend/expo-env.d.ts
+
+# React Native
+frontend/ios/
+frontend/android/
+frontend/.bundle/
+
+# Metro bundler
+frontend/.metro-health-check*
+
+# Generated files
+frontend/*.orig.*
+frontend/*.jks
+frontend/*.p8
+frontend/*.p12
+frontend/*.key
+frontend/*.mobileprovision
+
+# ================================
+# BACKEND (Reserved for future)
+# ================================
+# backend/node_modules/ (already covered by **/node_modules/)
+# backend/dist/
+# backend/build/
+# backend/.env
+# backend/logs/
+
+# ================================
+# ENVIRONMENT & CONFIG
+# ================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+**/.env
+**/.env.local
+
+# ================================
+# BUILD OUTPUTS
+# ================================
+dist/
+build/
+**/dist/
+**/build/
+*.tsbuildinfo
+
+# ================================
+# DEVELOPMENT TOOLS
+# ================================
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ================================
+# LOGS & DEBUGGING
+# ================================
+logs/
+*.log
+lerna-debug.log*
+
+# ================================
+# TESTING & COVERAGE
+# ================================
+coverage/
+**/coverage/
+.nyc_output/
+
+# ================================
+# TEMPORARY FILES
+# ================================
+*.tmp
+*.temp
+.cache/
+**/cache/
+
+# ================================
+# PACKAGE MANAGERS
+# ================================
+.pnp
+.pnp.js
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# ================================
+# TAILWIND/STYLING (for your setup)
+# ================================
+# Tailwind CSS build files (if generating CSS)
+frontend/tailwind.output.css
+
+# ================================
+# MISC
+# ================================
+*.pem
+.kotlin/
