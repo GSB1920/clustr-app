@@ -6,7 +6,7 @@ Clustr is a mobile app designed to strengthen local communities by making it eff
 
 - **Frontend:** React Native (Expo)
 - **Backend:** Python (FastAPI)
-- **Database:** SQLite (Development)
+- **Database:** PostgreSQL
 - **Real-Time Communication:** Socket.IO
 
 ## 📋 Project Overview
