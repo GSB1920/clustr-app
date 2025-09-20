@@ -14,6 +14,20 @@ import { ClustrText, ClustrButton, ClustrInput, ClustrCard } from '../components
 
 const { width, height } = Dimensions.get('window')
 
+// Calculate responsive values based on screen size
+const getResponsiveValues = () => {
+  const isSmallScreen = height < 700
+  const isMediumScreen = height >= 700 && height < 800
+  const isLargeScreen = height >= 800
+  
+  return {
+    topPadding: isSmallScreen ? 40 : isMediumScreen ? 50 : 60,
+    cardPadding: isSmallScreen ? 20 : 24,
+    sectionSpacing: isSmallScreen ? 16 : 20,
+    inputSpacing: isSmallScreen ? 16 : 20,
+  }
+}
+
 export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
   const { colors } = useClustrTheme()
   const [isSignUp, setIsSignUp] = useState(false)
@@ -23,6 +37,8 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
     password: '',
     confirmPassword: ''
   })
+  
+  const responsive = getResponsiveValues()
   
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -86,16 +102,19 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
         <ScrollView 
           style={{ flex: 1 }}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ flexGrow: 1 }}
+          contentContainerStyle={{ 
+            flexGrow: 1,
+            paddingBottom: 20
+          }}
         >
-          {/* Header */}
+          {/* Header - Optimized spacing */}
           <Animated.View 
             style={{
               opacity: fadeAnim,
               transform: [{ translateY: slideAnim }],
               paddingHorizontal: 24,
-              paddingTop: 60,
-              paddingBottom: 40,
+              paddingTop: responsive.topPadding,
+              paddingBottom: responsive.sectionSpacing,
             }}
           >
             {/* Back Button */}
@@ -104,7 +123,7 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
               style={{
                 alignSelf: 'flex-start',
                 padding: 8,
-                marginBottom: 20,
+                marginBottom: 16,
               }}
             >
               <ClustrText style={{ color: colors.primary, fontSize: 16 }}>
@@ -116,7 +135,7 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
             <ClustrText 
               variant="title" 
               style={{
-                fontSize: 28,
+                fontSize: height < 700 ? 24 : 28,
                 fontWeight: '700',
                 color: colors.text,
                 marginBottom: 8,
@@ -128,9 +147,9 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
             <ClustrText 
               variant="body" 
               style={{
-                fontSize: 16,
+                fontSize: height < 700 ? 14 : 16,
                 color: colors.textSecondary,
-                lineHeight: 24,
+                lineHeight: height < 700 ? 20 : 24,
               }}
             >
               {isSignUp 
@@ -140,7 +159,7 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
             </ClustrText>
           </Animated.View>
 
-          {/* Auth Form */}
+          {/* Auth Form - Optimized layout */}
           <Animated.View 
             style={{
               opacity: fadeAnim,
@@ -150,7 +169,7 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
             }}
           >
             <ClustrCard style={{
-              padding: 24,
+              padding: responsive.cardPadding,
               borderRadius: 16,
               backgroundColor: colors.surface,
               shadowColor: '#000',
@@ -161,7 +180,7 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
             }}>
               {/* Name Field (Sign Up Only) */}
               {isSignUp && (
-                <View style={{ marginBottom: 20 }}>
+                <View style={{ marginBottom: responsive.inputSpacing }}>
                   <ClustrText 
                     variant="label" 
                     style={{
@@ -179,7 +198,7 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
                     onChangeText={(value) => handleInputChange('name', value)}
                     style={{
                       borderRadius: 12,
-                      paddingVertical: 14,
+                      paddingVertical: height < 700 ? 12 : 14,
                       paddingHorizontal: 16,
                       fontSize: 16,
                     }}
@@ -188,7 +207,7 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
               )}
 
               {/* Email Field */}
-              <View style={{ marginBottom: 20 }}>
+              <View style={{ marginBottom: responsive.inputSpacing }}>
                 <ClustrText 
                   variant="label" 
                   style={{
@@ -208,7 +227,7 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
                   autoCapitalize="none"
                   style={{
                     borderRadius: 12,
-                    paddingVertical: 14,
+                    paddingVertical: height < 700 ? 12 : 14,
                     paddingHorizontal: 16,
                     fontSize: 16,
                   }}
@@ -216,7 +235,7 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
               </View>
 
               {/* Password Field */}
-              <View style={{ marginBottom: isSignUp ? 20 : 24 }}>
+              <View style={{ marginBottom: isSignUp ? responsive.inputSpacing : 20 }}>
                 <ClustrText 
                   variant="label" 
                   style={{
@@ -235,7 +254,7 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
                   secureTextEntry
                   style={{
                     borderRadius: 12,
-                    paddingVertical: 14,
+                    paddingVertical: height < 700 ? 12 : 14,
                     paddingHorizontal: 16,
                     fontSize: 16,
                   }}
@@ -244,7 +263,7 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
 
               {/* Confirm Password Field (Sign Up Only) */}
               {isSignUp && (
-                <View style={{ marginBottom: 24 }}>
+                <View style={{ marginBottom: 20 }}>
                   <ClustrText 
                     variant="label" 
                     style={{
@@ -263,7 +282,7 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
                     secureTextEntry
                     style={{
                       borderRadius: 12,
-                      paddingVertical: 14,
+                      paddingVertical: height < 700 ? 12 : 14,
                       paddingHorizontal: 16,
                       fontSize: 16,
                     }}
@@ -273,7 +292,7 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
 
               {/* Forgot Password (Sign In Only) */}
               {!isSignUp && (
-                <Pressable style={{ alignSelf: 'flex-end', marginBottom: 24 }}>
+                <Pressable style={{ alignSelf: 'flex-end', marginBottom: 20 }}>
                   <ClustrText 
                     style={{
                       color: colors.primary,
@@ -293,9 +312,9 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
                 onPress={handleAuth}
                 style={{
                   width: '100%',
-                  paddingVertical: 16,
+                  paddingVertical: height < 700 ? 14 : 16,
                   borderRadius: 12,
-                  marginBottom: 20,
+                  marginBottom: 16,
                   shadowColor: colors.primary,
                   shadowOffset: { width: 0, height: 3 },
                   shadowOpacity: 0.3,
@@ -316,7 +335,7 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
               <View style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                marginVertical: 20,
+                marginVertical: 16,
               }}>
                 <View style={{
                   flex: 1,
@@ -345,7 +364,7 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
                 size="lg"
                 style={{
                   width: '100%',
-                  paddingVertical: 16,
+                  paddingVertical: height < 700 ? 14 : 16,
                   borderRadius: 12,
                   marginBottom: 12,
                   borderWidth: 1,
@@ -366,7 +385,7 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
                 size="lg"
                 style={{
                   width: '100%',
-                  paddingVertical: 16,
+                  paddingVertical: height < 700 ? 14 : 16,
                   borderRadius: 12,
                   borderWidth: 1,
                   borderColor: colors.border,
@@ -387,7 +406,7 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
               flexDirection: 'row',
               justifyContent: 'center',
               alignItems: 'center',
-              paddingVertical: 24,
+              paddingVertical: height < 700 ? 16 : 24,
             }}>
               <ClustrText 
                 style={{
