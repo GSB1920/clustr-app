@@ -5,7 +5,7 @@ import { ClustrThemeProvider, useClustrTheme } from './src/theme/ClustrTheme'
 import { WelcomeScreen } from './src/screens/WelcomeScreen'
 import { AuthScreen } from './src/screens/AuthScreen'
 import { InterestScreen } from './src/screens/InterestScreen'
-import { DashboardScreen } from './src/screens/DashboardScreen'
+import { MainScreen } from './src/screens/MainScreen'
 import { 
   ClustrButton, 
   ClustrInput, 
@@ -203,8 +203,8 @@ const AppContent = () => {
       )
     
     case 'main':
-      console.log('📊 Rendering Dashboard')
-      return <DashboardScreen onLogout={handleLogout} user={user} />
+      console.log('📊 Rendering Main App with Tabs')
+      return <MainScreen onLogout={handleLogout} user={user} />
     
     default:
       console.log('🏠 Rendering Default Welcome Screen')
