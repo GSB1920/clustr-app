@@ -105,13 +105,13 @@ const EventCard = ({ event, onJoin }) => {
       {/* Category Tag */}
       <View style={{
         alignSelf: 'flex-start',
-        backgroundColor: event.categoryColor + '20',
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 12,
+        backgroundColor: event.categoryColor + '33',
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+        borderRadius: 16,
         marginBottom: 12
       }}>
-        <ClustrText variant="caption" style={{ color: event.categoryColor, fontWeight: '600' }}>
+        <ClustrText variant="body" style={{ color: event.categoryColor, fontWeight: '600', fontSize: 13 }}>
           {event.category}
         </ClustrText>
       </View>
@@ -194,7 +194,7 @@ const EventCard = ({ event, onJoin }) => {
             variant="button" 
             style={{ 
               color: event.isJoined ? colors.accent : colors.background,
-              fontSize: 12
+              fontSize: 18
             }}
           >
             {event.isJoined ? '✓ Joined' : 'Join'}
@@ -221,8 +221,8 @@ const CategoryFilter = ({ categories, selectedCategory, onSelectCategory }) => {
           onPress={() => onSelectCategory(category.id)}
           style={{
             backgroundColor: selectedCategory === category.id ? colors.primary : colors.surface,
-            paddingHorizontal: 16,
-            paddingVertical: 8,
+            paddingHorizontal: 20,
+            paddingVertical: 10,
             borderRadius: 20,
             marginRight: 12,
             borderWidth: 1,

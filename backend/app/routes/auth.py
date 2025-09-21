@@ -109,7 +109,7 @@ def login():
         user = User.query.filter_by(email=email).first()
         
         if not user:
-            return jsonify({'error': 'Invalid email or password'}), 401
+            return jsonify({'error': 'No account found with this email. Please sign up first.'}), 404
         
         # Check if user used OAuth to register
         if user.oauth_provider and not user.password_hash:
@@ -119,7 +119,7 @@ def login():
             }), 401
         
         if not user.check_password(password):
-            return jsonify({'error': 'Invalid email or password'}), 401
+            return jsonify({'error': 'Incorrect password. Please try again.'}), 401
         
         if not user.is_active:
             return jsonify({'error': 'Account is deactivated'}), 401
