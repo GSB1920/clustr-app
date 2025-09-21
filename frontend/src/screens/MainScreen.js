@@ -4,7 +4,6 @@ import { DashboardScreen } from './DashboardScreen'
 import { ChatTabScreen } from './ChatTabScreen'
 import { CreateTabScreen } from './CreateTabScreen'
 import { TabNavigation } from '../components/TabNavigation'
-
 export const MainScreen = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState('events')
 
