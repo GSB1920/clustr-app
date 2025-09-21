@@ -61,7 +61,7 @@ const AppContent = () => {
   const checkAppState = async () => {
     try {
       // TEMPORARY: Clear storage to always start from welcome (for development)
-      // await AsyncStorage.clear()  // Comment this out to keep login state
+      await AsyncStorage.clear()  // Uncomment this line to always start from welcome
       
       const hasSeenWelcome = await AsyncStorage.getItem('hasSeenWelcome')
       const userToken = await AsyncStorage.getItem('userToken')
