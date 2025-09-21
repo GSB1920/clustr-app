@@ -7,14 +7,15 @@ import {
   Animated,
   Pressable,
   TextInput,
-  FlatList
+  FlatList,
+  SafeAreaView
 } from 'react-native'
 import { useClustrTheme } from '../theme/ClustrTheme'
 import { ClustrText, ClustrButton, ClustrCard } from '../components/ui'
 
 const { width, height } = Dimensions.get('window')
 
-// Mock data for events
+// Enhanced mock data matching the screenshot
 const MOCK_EVENTS = [
   {
     id: 1,
@@ -26,13 +27,13 @@ const MOCK_EVENTS = [
     description: "Fresh local produce, artisanal foods, and live music. Perfect for a Saturday morning with family and friends.",
     attendees: [
       { id: 1, name: "John", avatar: "👨‍💼" },
-      { id: 2, name: "Sarah", avatar: "👩‍🎨" },
-      { id: 3, name: "Mike", avatar: "👨‍🍳" }
+      { id: 2, name: "Sarah", avatar: "👩‍🎨" }
     ],
-    attendeeCount: 3,
-    spotsLeft: 47,
-    isJoined: true,
-    categoryColor: "#FF6B6B"
+    attendeeCount: 2,
+    spotsLeft: 48,
+    isJoined: false,
+    categoryColor: "#FF6B6B",
+    categoryIcon: "🍎"
   },
   {
     id: 2,
@@ -43,282 +44,401 @@ const MOCK_EVENTS = [
     location: "Golden Gate Park Courts",
     description: "Friendly pickup basketball game. All skill levels welcome! Bring water and good vibes.",
     attendees: [
-      { id: 4, name: "Alex", avatar: "🏀" },
-      { id: 5, name: "Emma", avatar: "👩‍💻" }
+      { id: 4, name: "Alex", avatar: "🏀" }
     ],
-    attendeeCount: 2,
-    spotsLeft: 18,
-    isJoined: true,
-    categoryColor: "#4ECDC4"
+    attendeeCount: 1,
+    spotsLeft: 19,
+    isJoined: false,
+    categoryColor: "#4ECDC4",
+    categoryIcon: "🏀"
   },
   {
     id: 3,
-    title: "Photography Meetup",
+    title: "Tech Networking Mixer",
     category: "Social",
-    date: "Mon, Jan 22",
+    date: "Fri, Jan 26",
     time: "18:30",
-    location: "Lombard Street",
-    description: "Join fellow photographers for a golden hour shoot around the city's most scenic spots.",
+    location: "Downtown SF",
+    description: "Connect with local tech professionals, share ideas, and build meaningful relationships.",
     attendees: [
-      { id: 6, name: "Lisa", avatar: "📸" },
-      { id: 7, name: "David", avatar: "👨‍🎓" },
-      { id: 8, name: "Anna", avatar: "👩‍🎤" },
-      { id: 9, name: "Tom", avatar: "🎭" }
+      { id: 6, name: "Lisa", avatar: "👩‍💻" },
+      { id: 7, name: "David", avatar: "👨‍💼" },
+      { id: 8, name: "Maria", avatar: "👩‍🎨" }
     ],
-    attendeeCount: 4,
-    spotsLeft: 6,
-    isJoined: false,
-    categoryColor: "#45B7D1"
+    attendeeCount: 3,
+    spotsLeft: 27,
+    isJoined: true,
+    categoryColor: "#45B7D1",
+    categoryIcon: "🤝"
   },
   {
     id: 4,
     title: "Live Jazz Night",
     category: "Music",
-    date: "Fri, Jan 26",
+    date: "Sat, Jan 27",
     time: "20:00",
-    location: "Blue Note Cafe",
-    description: "Intimate jazz performance featuring local artists. Great drinks and atmosphere.",
+    location: "The Blue Note",
+    description: "Enjoy smooth jazz performances by local artists in an intimate setting.",
     attendees: [
-      { id: 10, name: "Jazz", avatar: "🎺" },
-      { id: 11, name: "Maya", avatar: "🎹" }
+      { id: 9, name: "Tom", avatar: "🎷" },
+      { id: 10, name: "Anna", avatar: "🎵" }
     ],
     attendeeCount: 2,
-    spotsLeft: 28,
+    spotsLeft: 38,
     isJoined: false,
-    categoryColor: "#9B59B6"
+    categoryColor: "#9B59B6",
+    categoryIcon: "🎵"
   }
 ]
 
 const CATEGORIES = [
-  { id: 'all', name: 'All', color: '#6C7B7F' },
-  { id: 'social', name: 'Social', color: '#45B7D1' },
-  { id: 'sports', name: 'Sports', color: '#4ECDC4' },
-  { id: 'food', name: 'Food', color: '#FF6B6B' },
-  { id: 'music', name: 'Music', color: '#9B59B6' }
+  { id: 'all', name: 'All', icon: '📋', color: '#6C7B7F' },
+  { id: 'social', name: 'Social', icon: '🤝', color: '#45B7D1' },
+  { id: 'sports', name: 'Sports', icon: '🏀', color: '#4ECDC4' },
+  { id: 'food', name: 'Food', icon: '🍎', color: '#FF6B6B' },
+  { id: 'music', name: 'Music', icon: '🎵', color: '#9B59B6' }
 ]
 
-const EventCard = ({ event, onJoin }) => {
+export const DashboardScreen = ({ onLogout, user }) => {
   const { colors } = useClustrTheme()
-  
-  return (
-    <ClustrCard style={{ marginBottom: 16, padding: 16 }}>
-      {/* Category Tag */}
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
+  const fadeAnim = useRef(new Animated.Value(0)).current
+  const slideAnim = useRef(new Animated.Value(50)).current
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      })
+    ]).start()
+  }, [])
+
+  const filteredEvents = MOCK_EVENTS.filter(event => {
+    const matchesCategory = selectedCategory === 'all' || 
+      event.category.toLowerCase() === selectedCategory
+    const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.location.toLowerCase().includes(searchQuery.toLowerCase())
+    return matchesCategory && matchesSearch
+  })
+
+  const EventCard = ({ event }) => (
+    <ClustrCard style={{
+      marginHorizontal: 20,
+      marginBottom: 16,
+      padding: 20,
+      borderRadius: 16,
+      backgroundColor: colors.surface,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
+      elevation: 4,
+    }}>
+      {/* Category Badge */}
       <View style={{
-        alignSelf: 'flex-start',
-        backgroundColor: event.categoryColor + '33',
-        paddingHorizontal: 14,
-        paddingVertical: 6,
-        borderRadius: 16,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         marginBottom: 12
       }}>
-        <ClustrText variant="body" style={{ color: event.categoryColor, fontWeight: '600', fontSize: 13 }}>
-          {event.category}
+        <View style={{
+          backgroundColor: event.categoryColor + '20',
+          paddingHorizontal: 12,
+          paddingVertical: 6,
+          borderRadius: 20,
+          flexDirection: 'row',
+          alignItems: 'center'
+        }}>
+          <ClustrText style={{ 
+            fontSize: 12, 
+            marginRight: 4 
+          }}>
+            {event.categoryIcon}
+          </ClustrText>
+          <ClustrText style={{ 
+            fontSize: 12, 
+            fontWeight: '600',
+            color: event.categoryColor 
+          }}>
+            {event.category}
+          </ClustrText>
+        </View>
+        <ClustrText style={{ 
+          fontSize: 12, 
+          color: colors.textSecondary,
+          fontWeight: '500'
+        }}>
+          {event.date}
         </ClustrText>
       </View>
 
       {/* Event Title */}
-      <ClustrText variant="heading" style={{ marginBottom: 8, fontSize: 18 }}>
+      <ClustrText style={{
+        fontSize: 18,
+        fontWeight: '700',
+        color: colors.text,
+        marginBottom: 8
+      }}>
         {event.title}
       </ClustrText>
 
-      {/* Date and Location */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-        <ClustrText variant="body" style={{ color: colors.textSecondary, marginRight: 16 }}>
-          📅 {event.date}
-        </ClustrText>
-        <ClustrText variant="body" style={{ color: colors.textSecondary }}>
-          🕐 {event.time}
-        </ClustrText>
-      </View>
-
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-        <ClustrText variant="body" style={{ color: colors.textSecondary }}>
-          📍 {event.location}
-        </ClustrText>
-      </View>
-
       {/* Description */}
-      <ClustrText variant="body" style={{ 
-        color: colors.textSecondary, 
-        marginBottom: 16,
-        lineHeight: 20
+      <ClustrText style={{
+        fontSize: 14,
+        color: colors.textSecondary,
+        lineHeight: 20,
+        marginBottom: 16
       }}>
         {event.description}
       </ClustrText>
 
-      {/* Attendees and Join Button */}
-      <View style={{ 
-        flexDirection: 'row', 
-        justifyContent: 'space-between', 
-        alignItems: 'center' 
+      {/* Location and Time */}
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 16
       }}>
-        <View style={{ flex: 1 }}>
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          flex: 1
+        }}>
+          <ClustrText style={{ fontSize: 14, marginRight: 4 }}>📍</ClustrText>
+          <ClustrText style={{
+            fontSize: 14,
+            color: colors.textSecondary,
+            flex: 1
+          }}>
+            {event.location}
+          </ClustrText>
+        </View>
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center'
+        }}>
+          <ClustrText style={{ fontSize: 14, marginRight: 4 }}>🕐</ClustrText>
+          <ClustrText style={{
+            fontSize: 14,
+            color: colors.textSecondary
+          }}>
+            {event.time}
+          </ClustrText>
+        </View>
+      </View>
+
+      {/* Attendees and Join Button */}
+      <View style={{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <View style={{
+          flexDirection: 'row',
+          alignItems: 'center'
+        }}>
           {/* Attendee Avatars */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+          <View style={{
+            flexDirection: 'row',
+            marginRight: 12
+          }}>
             {event.attendees.slice(0, 3).map((attendee, index) => (
-              <View key={attendee.id} style={{
-                width: 24,
-                height: 24,
-                borderRadius: 12,
-                backgroundColor: colors.surface,
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginLeft: index > 0 ? -8 : 0,
-                borderWidth: 2,
-                borderColor: colors.background
-              }}>
-                <ClustrText variant="caption" style={{ fontSize: 12 }}>
+              <View
+                key={attendee.id}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  backgroundColor: colors.primary + '20',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginLeft: index > 0 ? -8 : 0,
+                  borderWidth: 2,
+                  borderColor: colors.surface
+                }}
+              >
+                <ClustrText style={{ fontSize: 14 }}>
                   {attendee.avatar}
                 </ClustrText>
               </View>
             ))}
           </View>
           
-          {/* Attendance Count */}
-          <ClustrText variant="caption" style={{ color: colors.textSecondary }}>
-            {event.attendeeCount} attending • {event.spotsLeft} spots left
-          </ClustrText>
+          <View>
+            <ClustrText style={{
+              fontSize: 12,
+              fontWeight: '600',
+              color: colors.text
+            }}>
+              {event.attendeeCount} attending
+            </ClustrText>
+            <ClustrText style={{
+              fontSize: 11,
+              color: colors.textSecondary
+            }}>
+              {event.spotsLeft} spots left
+            </ClustrText>
+          </View>
         </View>
 
-        {/* Join/Joined Button */}
         <ClustrButton
           variant={event.isJoined ? "secondary" : "primary"}
-          size="small"
-          onPress={() => onJoin(event.id)}
-          style={{ 
-            minWidth: 80,
-            backgroundColor: event.isJoined ? colors.surface : colors.primary
+          style={{
+            paddingHorizontal: 24,
+            paddingVertical: 12,
+            borderRadius: 25,
+            minWidth: 80
           }}
+          onPress={() => console.log(`${event.isJoined ? 'Leave' : 'Join'} ${event.title}`)}
         >
-          <ClustrText 
-            variant="button" 
-            style={{ 
-              color: event.isJoined ? colors.accent : colors.background,
-              fontSize: 18
-            }}
-          >
-            {event.isJoined ? '✓ Joined' : 'Join'}
+          <ClustrText style={{
+            fontSize: 14,
+            fontWeight: '600',
+            color: event.isJoined ? colors.text : colors.surface
+          }}>
+            {event.isJoined ? 'Joined' : 'Join'}
           </ClustrText>
         </ClustrButton>
       </View>
     </ClustrCard>
   )
-}
 
-const CategoryFilter = ({ categories, selectedCategory, onSelectCategory }) => {
-  const { colors } = useClustrTheme()
-  
-  return (
-    <ScrollView 
-      horizontal 
-      showsHorizontalScrollIndicator={false}
-      style={{ marginBottom: 20 }}
-      contentContainerStyle={{ paddingHorizontal: 24 }}
+  const CategoryButton = ({ category, isSelected }) => (
+    <Pressable
+      onPress={() => setSelectedCategory(category.id)}
+      style={{
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderRadius: 25,
+        backgroundColor: isSelected ? colors.primary : colors.surface,
+        marginRight: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: isSelected ? 0.2 : 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+      }}
     >
-      {categories.map((category) => (
-        <Pressable
-          key={category.id}
-          onPress={() => onSelectCategory(category.id)}
-          style={{
-            backgroundColor: selectedCategory === category.id ? colors.primary : colors.surface,
-            paddingHorizontal: 20,
-            paddingVertical: 10,
-            borderRadius: 20,
-            marginRight: 12,
-            borderWidth: 1,
-            borderColor: selectedCategory === category.id ? colors.primary : colors.border
-          }}
-        >
-          <ClustrText 
-            variant="button" 
-            style={{ 
-              color: selectedCategory === category.id ? colors.background : colors.text,
-              fontSize: 14
-            }}
-          >
-            {category.name}
-          </ClustrText>
-        </Pressable>
-      ))}
-    </ScrollView>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <ClustrText style={{ 
+          fontSize: 14, 
+          marginRight: 6 
+        }}>
+          {category.icon}
+        </ClustrText>
+        <ClustrText style={{
+          fontSize: 14,
+          fontWeight: '600',
+          color: isSelected ? colors.surface : colors.text
+        }}>
+          {category.name}
+        </ClustrText>
+      </View>
+    </Pressable>
   )
-}
-
-export const DashboardScreen = ({ onLogout, user }) => {
-  const { colors } = useClustrTheme()
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [events, setEvents] = useState(MOCK_EVENTS)
-  
-  const fadeAnim = useRef(new Animated.Value(0)).current
-
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 600,
-      useNativeDriver: true,
-    }).start()
-  }, [])
-
-  const handleJoinEvent = (eventId) => {
-    setEvents(prevEvents => 
-      prevEvents.map(event => 
-        event.id === eventId 
-          ? { 
-              ...event, 
-              isJoined: !event.isJoined,
-              attendeeCount: event.isJoined ? event.attendeeCount - 1 : event.attendeeCount + 1,
-              spotsLeft: event.isJoined ? event.spotsLeft + 1 : event.spotsLeft - 1
-            }
-          : event
-      )
-    )
-  }
-
-  const filteredEvents = events.filter(event => {
-    const matchesCategory = selectedCategory === 'all' || event.category.toLowerCase() === selectedCategory
-    const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         event.description.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesCategory && matchesSearch
-  })
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <StatusBar backgroundColor={colors.background} barStyle="dark-content" />
-      
-      <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-        {/* Header */}
-        <View style={{
-          paddingTop: 60,
-          paddingHorizontal: 24,
-          paddingBottom: 20,
-          backgroundColor: colors.background,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.border
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <StatusBar backgroundColor={colors.surface} barStyle="dark-content" />
+        
+        <Animated.View style={{ 
+          flex: 1, 
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }]
         }}>
-          <View style={{ 
-            flexDirection: 'row', 
-            justifyContent: 'space-between', 
+          {/* Header */}
+          <View style={{
+            paddingTop: 16,
+            paddingHorizontal: 20,
+            paddingBottom: 20,
+          backgroundColor: colors.surface,
+          borderBottomLeftRadius: 24,
+          borderBottomRightRadius: 24,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 4,
+        }}>
+          <View style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: 16
+            marginBottom: 20
           }}>
-            <ClustrText variant="title" style={{ fontSize: 28, fontWeight: '700' }}>
-              Clustr
-            </ClustrText>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Pressable style={{ marginRight: 16 }}>
-                <ClustrText style={{ fontSize: 20 }}>🔔</ClustrText>
-              </Pressable>
-              <Pressable onPress={onLogout} style={{
-                width: 32,
-                height: 32,
-                borderRadius: 16,
-                backgroundColor: colors.accent,
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center'
+            }}>
+              <View style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: colors.primary,
                 justifyContent: 'center',
-                alignItems: 'center'
+                alignItems: 'center',
+                marginRight: 12
               }}>
-                <ClustrText style={{ fontSize: 16 }}>
-                  {user?.username ? user.username[0].toUpperCase() : '👤'}
+                <ClustrText style={{ 
+                  fontSize: 18,
+                  color: colors.surface 
+                }}>
+                  C
+                </ClustrText>
+              </View>
+              <View>
+                <ClustrText style={{
+                  fontSize: 24,
+                  fontWeight: '700',
+                  color: colors.text
+                }}>
+                  Clustr
+                </ClustrText>
+                <ClustrText style={{
+                  fontSize: 12,
+                  color: colors.textSecondary
+                }}>
+                  San Francisco, CA
+                </ClustrText>
+              </View>
+            </View>
+            
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Pressable 
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: colors.background,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginRight: 12
+                }}
+              >
+                <ClustrText style={{ fontSize: 18 }}>🔔</ClustrText>
+              </Pressable>
+              
+              <Pressable
+                onPress={onLogout}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: user ? colors.primary + '20' : colors.background,
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+              >
+                <ClustrText style={{ fontSize: 18 }}>
+                  {user ? '👤' : '🔐'}
                 </ClustrText>
               </Pressable>
             </View>
@@ -326,75 +446,93 @@ export const DashboardScreen = ({ onLogout, user }) => {
 
           {/* Search Bar */}
           <View style={{
-            backgroundColor: colors.surface,
-            borderRadius: 12,
+            backgroundColor: colors.background,
+            borderRadius: 16,
             paddingHorizontal: 16,
             paddingVertical: 12,
-            borderWidth: 1,
-            borderColor: colors.border
+            flexDirection: 'row',
+            alignItems: 'center'
           }}>
+            <ClustrText style={{ fontSize: 16, marginRight: 12 }}>🔍</ClustrText>
             <TextInput
+              style={{
+                flex: 1,
+                fontSize: 16,
+                color: colors.text,
+                fontFamily: 'System'
+              }}
               placeholder="Search events..."
               placeholderTextColor={colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
-              style={{
-                color: colors.text,
-                fontSize: 13,
-                fontFamily: 'System'
-              }}
             />
           </View>
         </View>
 
-        {/* Tab Navigation */}
+        {/* Navigation Tabs */}
         <View style={{
-          flexDirection: 'row',
-          paddingHorizontal: 24,
-          paddingVertical: 16,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.border
+          paddingVertical: 20,
+          paddingLeft: 20
         }}>
-          <Pressable style={{ marginRight: 32 }}>
-            <ClustrText variant="heading" style={{ 
-              color: colors.primary,
-              borderBottomWidth: 2,
-              borderBottomColor: colors.primary,
-              paddingBottom: 4
-            }}>
-              Events
-            </ClustrText>
-          </Pressable>
-          <Pressable style={{ marginRight: 32 }}>
-            <ClustrText variant="heading" style={{ color: colors.textSecondary }}>
-              Chat
-            </ClustrText>
-          </Pressable>
-          <Pressable>
-            <ClustrText variant="heading" style={{ color: colors.textSecondary }}>
-              Create
-            </ClustrText>
-          </Pressable>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingRight: 20 }}
+          >
+            {CATEGORIES.map(category => (
+              <CategoryButton
+                key={category.id}
+                category={category}
+                isSelected={selectedCategory === category.id}
+              />
+            ))}
+          </ScrollView>
         </View>
 
-        {/* Category Filter */}
-        <CategoryFilter 
-          categories={CATEGORIES}
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-        />
-
         {/* Events List */}
-        <FlatList
-          data={filteredEvents}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <EventCard event={item} onJoin={handleJoinEvent} />
-          )}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 20 }}
+        <ScrollView
+          style={{ flex: 1 }}
           showsVerticalScrollIndicator={false}
-        />
+          contentContainerStyle={{ paddingBottom: 20 }}
+        >
+          {filteredEvents.map(event => (
+            <EventCard key={event.id} event={event} />
+          ))}
+          
+          {filteredEvents.length === 0 && (
+            <View style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingVertical: 60
+            }}>
+              <ClustrText style={{
+                fontSize: 48,
+                marginBottom: 16
+              }}>
+                🔍
+              </ClustrText>
+              <ClustrText style={{
+                fontSize: 18,
+                fontWeight: '600',
+                color: colors.text,
+                marginBottom: 8
+              }}>
+                No events found
+              </ClustrText>
+              <ClustrText style={{
+                fontSize: 14,
+                color: colors.textSecondary,
+                textAlign: 'center',
+                paddingHorizontal: 40
+              }}>
+                Try adjusting your search or category filter
+              </ClustrText>
+            </View>
+          )}
+        </ScrollView>
       </Animated.View>
     </View>
+    </SafeAreaView>
   )
 }
