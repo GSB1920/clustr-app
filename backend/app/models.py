@@ -103,3 +103,35 @@ class User(db.Model):
     
     def __repr__(self):
         return f'<User {self.email}>'
+
+class Event(db.Model):
+    __tablename__ = 'events'
+    
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    title = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    category = db.Column(db.String(50), nullable=False)  # Primary category
+    tags = db.Column(db.JSON, default=list)  # Multiple categories/tags
+    location = db.Column(db.String(500), nullable=False)
+    event_date = db.Column(db.DateTime, nullable=False)
+    max_attendees = db.Column(db.Integer, nullable=False)
+    attendees = db.Column(db.JSON, default=list)  # Array of user IDs
+    created_by = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'category': self.category,
+            'tags': self.tags or [],
+            'location': self.location,
+            'event_date': self.event_date.isoformat() if self.event_date else None,
+            'max_attendees': self.max_attendees,
+            'attendees': self.attendees or [],
+            'attendee_count': len(self.attendees) if self.attendees else 0,
+            'spots_left': self.max_attendees - (len(self.attendees) if self.attendees else 0),
+            'created_by': self.created_by,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }

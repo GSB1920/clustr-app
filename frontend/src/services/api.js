@@ -37,6 +37,14 @@ const apiRequest = async (endpoint, options = {}) => {
     
     console.log('📡 Response status:', response.status)
     
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text()
+      console.error('❌ Non-JSON response:', text)
+      throw new Error(`Server returned ${response.status}: Expected JSON but got ${contentType}`)
+    }
+    
     const data = await response.json()
 
     if (!response.ok) {
@@ -154,4 +162,46 @@ export const healthCheck = async () => {
     console.error('💔 Backend not available:', error)
     throw new Error(`Backend server is not running at ${NGROK_URL}`)
   }
+}
+
+// Events API
+export const eventsAPI = {
+  // Create new event
+  createEvent: async (eventData, token) => {
+    console.log('🎯 Creating event:', eventData)
+    return await apiRequest('/events', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(eventData),
+    })
+  },
+
+  // Get all events
+  getEvents: async (filters = {}) => {
+    // Filter out undefined/null values
+    const cleanFilters = Object.entries(filters)
+      .filter(([key, value]) => value !== undefined && value !== null && value !== '')
+      .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {})
+    
+    const params = new URLSearchParams(cleanFilters)
+    const queryString = params.toString()
+    const endpoint = queryString ? `/events?${queryString}` : '/events'
+    
+    return await apiRequest(endpoint, {
+      method: 'GET',
+    })
+  },
+
+  // Join event
+  joinEvent: async (eventId, token) => {
+    return await apiRequest(`/events/${eventId}/join`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+  },
 }

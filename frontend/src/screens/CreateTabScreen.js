@@ -13,6 +13,8 @@ import {
 } from 'react-native'
 import { useClustrTheme } from '../theme/ClustrTheme'
 import { ClustrText, ClustrCard, ClustrButton, ClustrInput } from '../components/ui'
+import { eventsAPI } from '../services/api'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import DateTimePicker from '@react-native-community/datetimepicker'
 
 // Event categories with icons and colors
@@ -159,23 +161,53 @@ export const CreateTabScreen = ({ user }) => {
   }
 
   const handleCreateEvent = async () => {
-    if (!validateForm()) return
+    console.log('🚀 CREATE EVENT BUTTON CLICKED!')
+    console.log('📝 Current form data:', eventData)
+    console.log('🏷️ Selected categories:', selectedCategory)
+    
+    if (!validateForm()) {
+      console.log('❌ Form validation failed')
+      return
+    }
 
+    console.log('✅ Form validation passed, starting API call...')
     setIsLoading(true)
 
     try {
-      const newEvent = {
-        ...eventData,
-        category: selectedCategory,
-        capacity: parseInt(eventData.capacity),
-        created_by: user?.id || 'demo'
+      // Get user token for authentication
+      const userToken = await AsyncStorage.getItem('userToken')
+      if (!userToken) {
+        Alert.alert('Authentication Required', 'Please log in to create events')
+        setIsLoading(false)
+        return
       }
 
-      console.log('🎉 Creating event:', newEvent)
+      // Prepare event data for backend API
+      const eventPayload = {
+        title: eventData.title.trim(),
+        description: eventData.description.trim(),
+        categories: selectedCategory, // selectedCategory is already an array
+        streetAddress: eventData.streetAddress.trim(),
+        city: eventData.city.trim() || 'San Francisco', 
+        state: eventData.state.trim() || 'CA',  
+        zipCode: eventData.zipCode.trim() || '94102',
+        landmark: eventData.landmark?.trim() || '',
+        capacity: parseInt(eventData.capacity),
+        // TODO: Add proper date/time handling from the date/time pickers
+        date: eventData.date.toISOString()
+      }
+
+      console.log('🎉 Creating event with payload:', eventPayload)
+      console.log('🔑 Using user token:', userToken ? 'exists' : 'missing')
+      
+      // Actually call the backend API!
+      const response = await eventsAPI.createEvent(eventPayload, userToken)
+      
+      console.log('✅ Event created successfully:', response)
       
       Alert.alert(
         'Event Created!', 
-        `"${eventData.title}" has been created successfully.`,
+        `"${eventData.title}" has been created successfully and saved to the backend!`,
         [
           {
             text: 'Create Another',
@@ -204,7 +236,10 @@ export const CreateTabScreen = ({ user }) => {
 
     } catch (error) {
       console.error('❌ Create event error:', error)
-      Alert.alert('Error', 'Failed to create event. Please try again.')
+      Alert.alert(
+        'Error', 
+        error.message || 'Failed to create event. Please check your connection and try again.'
+      )
     } finally {
       setIsLoading(false)
     }
@@ -531,93 +566,106 @@ export const CreateTabScreen = ({ user }) => {
                 </View>
               </ClustrCard>
 
-              {/* Enhanced Date and Time Section */}
-              <ClustrCard style={{ marginBottom: 24, padding: 20 }}>
+              {/* Working Date and Time Section */}
+              <View style={{ marginBottom: 24 }}>
                 <ClustrText style={{
                   fontSize: 16,
                   fontWeight: '600',
                   color: colors.text,
-                  marginBottom: 16
+                  marginBottom: 12
                 }}>
                   When is your event? *
                 </ClustrText>
 
-                <View style={{ flexDirection: 'row' }}>
-                  {/* Date Picker */}
-                  <View style={{ flex: 1, marginRight: 12 }}>
-                    <ClustrText style={{
-                      fontSize: 14,
-                      fontWeight: '600',
-                      color: colors.text,
-                      marginBottom: 8
-                    }}>
-                      Date
+                {/* Date Picker */}
+                <View style={{ marginBottom: 16 }}>
+                  <ClustrText style={{
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: colors.text,
+                    marginBottom: 8
+                  }}>
+                    Date
+                  </ClustrText>
+                  <Pressable
+                    onPress={() => setShowDatePicker(true)}
+                    style={{
+                      backgroundColor: colors.surface,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      padding: 16,
+                      flexDirection: 'row',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <ClustrText style={{ fontSize: 16, marginRight: 8 }}>📅</ClustrText>
+                    <ClustrText style={{ fontSize: 16, color: colors.text }}>
+                      {eventData.date.toDateString()}
                     </ClustrText>
-                    <Pressable
-                      onPress={() => setShowDatePicker(true)}
-                      style={{
-                        backgroundColor: colors.surface,
-                        borderRadius: 12,
-                        borderWidth: 1,
-                        borderColor: colors.border,
-                        padding: 16,
-                        flexDirection: 'row',
-                        alignItems: 'center'
-                      }}
-                    >
-                      <ClustrText style={{ fontSize: 16, marginRight: 8 }}>📅</ClustrText>
-                      <ClustrText style={{
-                        fontSize: 16,
-                        color: colors.text,
-                        flex: 1
-                      }}>
-                        {formatDate(eventData.date)}
-                      </ClustrText>
-                    </Pressable>
-                  </View>
-                  
-                  {/* Time Picker */}
-                  <View style={{ flex: 1, marginLeft: 12 }}>
-                    <ClustrText style={{
-                      fontSize: 14,
-                      fontWeight: '600',
-                      color: colors.text,
-                      marginBottom: 8
-                    }}>
-                      Time
-                    </ClustrText>
-                    <Pressable
-                      onPress={() => setShowTimePicker(true)}
-                      style={{
-                        backgroundColor: colors.surface,
-                        borderRadius: 12,
-                        borderWidth: 1,
-                        borderColor: colors.border,
-                        padding: 16,
-                        flexDirection: 'row',
-                        alignItems: 'center'
-                      }}
-                    >
-                      <ClustrText style={{ fontSize: 16, marginRight: 8 }}>🕐</ClustrText>
-                      <ClustrText style={{
-                        fontSize: 16,
-                        color: colors.text,
-                        flex: 1
-                      }}>
-                        {formatTime(eventData.time)}
-                      </ClustrText>
-                    </Pressable>
-                  </View>
+                  </Pressable>
                 </View>
 
-                <ClustrText style={{
-                  fontSize: 12,
-                  color: colors.textSecondary,
-                  marginTop: 8
-                }}>
-                  Only future dates and times are allowed
-                </ClustrText>
-              </ClustrCard>
+                {/* Time Picker */}
+                <View style={{ marginBottom: 16 }}>
+                  <ClustrText style={{
+                    fontSize: 14,
+                    fontWeight: '600',
+                    color: colors.text,
+                    marginBottom: 8
+                  }}>
+                    Time
+                  </ClustrText>
+                  <Pressable
+                    onPress={() => setShowTimePicker(true)}
+                    style={{
+                      backgroundColor: colors.surface,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      padding: 16,
+                      flexDirection: 'row',
+                      alignItems: 'center'
+                    }}
+                  >
+                    <ClustrText style={{ fontSize: 16, marginRight: 8 }}>🕐</ClustrText>
+                    <ClustrText style={{ fontSize: 16, color: colors.text }}>
+                      {eventData.time.toLocaleTimeString()}
+                    </ClustrText>
+                  </Pressable>
+                </View>
+              </View>
+
+              {/* Date Picker Component */}
+              {showDatePicker && (
+                <DateTimePicker
+                  value={eventData.date}
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
+                    setShowDatePicker(false)
+                    if (selectedDate) {
+                      setEventData(prev => ({ ...prev, date: selectedDate }))
+                    }
+                  }}
+                  minimumDate={new Date()}
+                />
+              )}
+
+              {/* Time Picker Component */}
+              {showTimePicker && (
+                <DateTimePicker
+                  value={eventData.time}
+                  mode="time"
+                  display="default"
+                  onChange={(event, selectedTime) => {
+                    setShowTimePicker(false)
+                    if (selectedTime) {
+                      setEventData(prev => ({ ...prev, time: selectedTime }))
+                    }
+                  }}
+                />
+              )}
 
               {/* Enhanced Capacity Section */}
               <View style={{ marginBottom: 24 }}>
