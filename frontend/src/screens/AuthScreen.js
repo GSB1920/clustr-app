@@ -14,16 +14,12 @@ import { useClustrTheme } from '../theme/ClustrTheme'
 import { ClustrText, ClustrButton, ClustrInput, ClustrCard } from '../components/ui'
 import { authAPI } from '../services/api'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { GoogleIcon } from '../components/GoogleIcon'
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin'
 
 const { width, height } = Dimensions.get('window')
 
-// Calculate responsive values based on screen size
 const getResponsiveValues = () => {
   const isSmallScreen = height < 700
   const isMediumScreen = height >= 700 && height < 800
-  const isLargeScreen = height >= 800
   
   return {
     topPadding: isSmallScreen ? 40 : isMediumScreen ? 50 : 60,
@@ -45,48 +41,15 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
   })
   
   const responsive = getResponsiveValues()
-  
-  // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current
-  const slideAnim = useRef(new Animated.Value(20)).current
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        tension: 50,
-        friction: 8,
-        useNativeDriver: true,
-      })
-    ]).start()
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start()
   }, [])
-
-  useEffect(() => {
-    configureGoogleSignIn()
-  }, [])
-
-  const configureGoogleSignIn = async () => {
-    try {
-      // Get Google config from backend
-      const config = await authAPI.getGoogleConfig()
-      
-      GoogleSignin.configure({
-        webClientId: config.google_client_id, // Your actual Google Client ID
-        offlineAccess: true,
-        hostedDomain: '', // Optional - restrict to specific domain
-        forceCodeForRefreshToken: true,
-      })
-      
-      console.log('✅ Google Sign-In configured with client ID:', config.google_client_id)
-    } catch (error) {
-      console.error('❌ Google Sign-In configuration failed:', error)
-    }
-  }
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -132,7 +95,6 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
       let response
       
       if (isSignUp) {
-        // Signup
         response = await authAPI.signup({
           name: formData.name,
           email: formData.email.toLowerCase(),
@@ -140,7 +102,6 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
         })
         console.log('✅ Signup successful:', response)
       } else {
-        // Login
         response = await authAPI.login({
           email: formData.email.toLowerCase(),
           password: formData.password,
@@ -148,11 +109,9 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
         console.log('✅ Login successful:', response)
       }
 
-      // Success! Save token and user data, then go directly to dashboard
       await AsyncStorage.setItem('userToken', response.token)
       await AsyncStorage.setItem('userData', JSON.stringify(response.user))
       
-      // Go directly to dashboard without alert
       onAuthSuccess(response)
 
     } catch (error) {
@@ -161,74 +120,6 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
         'Authentication Error',
         error.message || 'Something went wrong. Please try again.'
       )
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  // Update handleGoogleAuth with detailed logging
-  const handleGoogleAuth = async () => {
-    if (isLoading) return
-    
-    setIsLoading(true)
-    console.log('🔵 Starting Real Google OAuth...')
-
-    try {
-      console.log('🔧 Step 1: Configuring Google Sign-In...')
-      await configureGoogleSignIn()
-      
-      console.log('🔍 Step 2: Checking Google Play Services...')
-      const hasPlayServices = await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true })
-      console.log('✅ Google Play Services available:', hasPlayServices)
-      
-      console.log('�� Step 3: Initiating Google Sign-In...')
-      console.log('📱 About to call GoogleSignin.signIn()...')
-
-      // Add timeout to prevent infinite hang
-      const signInPromise = GoogleSignin.signIn()
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Google Sign-In timeout after 20 seconds - check configuration')), 20000)
-      )
-      
-      const googleUser = await Promise.race([signInPromise, timeoutPromise])
-      console.log('✅ Google sign-in successful:', googleUser.user)
-      
-      // Rest of your code...
-      const idToken = googleUser.idToken
-      
-      if (!idToken) {
-        throw new Error('No ID token received from Google')
-      }
-
-      console.log('🔐 Sending token to backend for verification...')
-      const response = await authAPI.googleAuth(idToken, 'id_token')
-      
-      console.log('✅ Backend verification successful:', response.user)
-      
-      await AsyncStorage.setItem('userToken', response.token)
-      await AsyncStorage.setItem('userData', JSON.stringify(response.user))
-      
-      console.log('✅ Real Google OAuth complete - navigating to dashboard')
-      onAuthSuccess(response)
-
-    } catch (error) {
-      console.error('�� Google OAuth error:', error)
-      
-      let errorMessage = 'Google authentication failed'
-      
-      if (error.message?.includes('timeout')) {
-        errorMessage = 'Google Sign-In timed out. Please check your SHA-1 configuration.'
-      } else if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        errorMessage = 'Google sign-in was cancelled'
-      } else if (error.code === statusCodes.IN_PROGRESS) {
-        errorMessage = 'Google sign-in is already in progress'
-      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        errorMessage = 'Google Play Services not available'
-      } else if (error.message) {
-        errorMessage = error.message
-      }
-      
-      Alert.alert('Google Sign-In Error', errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -249,89 +140,42 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
       style={{ flex: 1 }} 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View style={{ 
-        flex: 1, 
-        backgroundColor: colors.background 
-      }}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
         <StatusBar backgroundColor={colors.background} barStyle="dark-content" />
         
-        <ScrollView 
-          style={{ flex: 1 }}
-          contentContainerStyle={{ flexGrow: 1 }}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <Animated.View 
-            style={{
-              flex: 1,
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-              paddingTop: responsive.topPadding,
-            }}
-          >
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+          <Animated.View style={{ flex: 1, opacity: fadeAnim, paddingTop: responsive.topPadding }}>
+            
             {/* Header */}
-            <View style={{
-              alignItems: 'center',
-              marginBottom: responsive.sectionSpacing * 2,
-              paddingHorizontal: responsive.cardPadding,
-            }}>
-              <ClustrText variant="title" style={{
-                fontSize: 32,
-                fontWeight: '700',
-                marginBottom: 8,
-                textAlign: 'center',
-              }}>
+            <View style={{ alignItems: 'center', marginBottom: 40, paddingHorizontal: 24 }}>
+              <ClustrText variant="title" style={{ fontSize: 32, fontWeight: '700', marginBottom: 8 }}>
                 {isSignUp ? 'Create Account' : 'Welcome Back'}
               </ClustrText>
-              
-              <ClustrText style={{
-                color: colors.textSecondary,
-                fontSize: 16,
-                textAlign: 'center',
-                lineHeight: 22,
-              }}>
-                {isSignUp 
-                  ? 'Join the community and discover amazing events'
-                  : 'Sign in to continue to your account'
-                }
+              <ClustrText style={{ color: colors.textSecondary, fontSize: 16, textAlign: 'center' }}>
+                {isSignUp ? 'Join the community' : 'Sign in to continue'}
               </ClustrText>
             </View>
 
             {/* Form */}
-            <ClustrCard style={{
-              marginHorizontal: responsive.cardPadding,
-              padding: responsive.cardPadding,
-              marginBottom: responsive.sectionSpacing,
-            }}>
+            <ClustrCard style={{ marginHorizontal: 24, padding: 24, marginBottom: 20 }}>
+              
               {/* Name Field (Sign Up only) */}
               {isSignUp && (
-                <View style={{ marginBottom: responsive.inputSpacing }}>
-                  <ClustrText style={{
-                    fontSize: 14,
-                    fontWeight: '600',
-                    color: colors.text,
-                    marginBottom: 8,
-                  }}>
+                <View style={{ marginBottom: 20 }}>
+                  <ClustrText style={{ fontSize: 14, fontWeight: '600', marginBottom: 8 }}>
                     Full Name
                   </ClustrText>
                   <ClustrInput
                     placeholder="Enter your full name"
                     value={formData.name}
                     onChangeText={(value) => handleInputChange('name', value)}
-                    autoCapitalize="words"
-                    returnKeyType="next"
                   />
                 </View>
               )}
 
               {/* Email Field */}
-              <View style={{ marginBottom: responsive.inputSpacing }}>
-                <ClustrText style={{
-                  fontSize: 14,
-                  fontWeight: '600',
-                  color: colors.text,
-                  marginBottom: 8,
-                }}>
+              <View style={{ marginBottom: 20 }}>
+                <ClustrText style={{ fontSize: 14, fontWeight: '600', marginBottom: 8 }}>
                   Email
                 </ClustrText>
                 <ClustrInput
@@ -340,19 +184,12 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
                   onChangeText={(value) => handleInputChange('email', value)}
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  autoCorrect={false}
-                  returnKeyType="next"
                 />
               </View>
 
               {/* Password Field */}
-              <View style={{ marginBottom: isSignUp ? responsive.inputSpacing : 0 }}>
-                <ClustrText style={{
-                  fontSize: 14,
-                  fontWeight: '600',
-                  color: colors.text,
-                  marginBottom: 8,
-                }}>
+              <View style={{ marginBottom: isSignUp ? 20 : 0 }}>
+                <ClustrText style={{ fontSize: 14, fontWeight: '600', marginBottom: 8 }}>
                   Password
                 </ClustrText>
                 <ClustrInput
@@ -360,19 +197,13 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
                   value={formData.password}
                   onChangeText={(value) => handleInputChange('password', value)}
                   secureTextEntry
-                  returnKeyType={isSignUp ? "next" : "done"}
                 />
               </View>
 
-              {/* Confirm Password Field (Sign Up only) */}
+              {/* Confirm Password (Sign Up only) */}
               {isSignUp && (
-                <View style={{ marginBottom: 0 }}>
-                  <ClustrText style={{
-                    fontSize: 14,
-                    fontWeight: '600',
-                    color: colors.text,
-                    marginBottom: 8,
-                  }}>
+                <View>
+                  <ClustrText style={{ fontSize: 14, fontWeight: '600', marginBottom: 8 }}>
                     Confirm Password
                   </ClustrText>
                   <ClustrInput
@@ -380,25 +211,18 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
                     value={formData.confirmPassword}
                     onChangeText={(value) => handleInputChange('confirmPassword', value)}
                     secureTextEntry
-                    returnKeyType="done"
                   />
                 </View>
               )}
             </ClustrCard>
 
             {/* Auth Button */}
-            <ClustrCard style={{
-              marginHorizontal: responsive.cardPadding,
-              padding: responsive.cardPadding,
-              marginBottom: responsive.sectionSpacing,
-            }}>
+            <ClustrCard style={{ marginHorizontal: 24, padding: 24, marginBottom: 20 }}>
               <ClustrButton
                 variant="primary"
                 onPress={handleAuth}
                 disabled={isLoading}
-                style={{
-                  opacity: isLoading ? 0.7 : 1,
-                }}
+                style={{ opacity: isLoading ? 0.7 : 1 }}
               >
                 <ClustrText variant="button" style={{ color: colors.background }}>
                   {isLoading 
@@ -409,128 +233,27 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
               </ClustrButton>
             </ClustrCard>
 
-            {/* OAuth Divider */}
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              marginHorizontal: responsive.cardPadding,
-              marginVertical: responsive.sectionSpacing,
-            }}>
-              <View style={{
-                flex: 1,
-                height: 1,
-                backgroundColor: colors.border,
-              }} />
-              <ClustrText style={{
-                marginHorizontal: 16,
-                color: colors.textSecondary,
-                fontSize: 14,
-              }}>
-                or
-              </ClustrText>
-              <View style={{
-                flex: 1,
-                height: 1,
-                backgroundColor: colors.border,
-              }} />
-            </View>
-
-            {/* Google OAuth Button */}
-            <ClustrCard style={{
-              marginHorizontal: responsive.cardPadding,
-              padding: responsive.cardPadding,
-              marginBottom: responsive.sectionSpacing,
-            }}>
-              <ClustrButton
-                variant="ghost"
-                onPress={handleGoogleAuth}
-                disabled={isLoading}
-                style={{
-                  borderWidth: 2,
-                  borderColor: colors.border,
-                  backgroundColor: colors.background,
-                  opacity: isLoading ? 0.7 : 1,
-                }}
-              >
-                <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  <GoogleIcon size={20} />
-                  <ClustrText 
-                    variant="button" 
-                    style={{ 
-                      color: colors.text,
-                      fontSize: 16,
-                      fontWeight: '500',
-                      marginLeft: 12
-                    }}
-                  >
-                    {isLoading 
-                      ? 'Connecting to Google...' 
-                      : `Continue with Google`
-                    }
-                  </ClustrText>
-                </View>
-              </ClustrButton>
-            </ClustrCard>
-
             {/* Switch Auth Mode */}
-            <View style={{
-              flexDirection: 'row',
-              justifyContent: 'center',
-              alignItems: 'center',
-              paddingVertical: height < 700 ? 16 : 24,
-            }}>
-              <ClustrText 
-                style={{
-                  color: colors.textSecondary,
-                  fontSize: 14,
-                  marginRight: 4,
-                }}
-              >
+            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 24 }}>
+              <ClustrText style={{ color: colors.textSecondary, fontSize: 14, marginRight: 4 }}>
                 {isSignUp ? 'Already have an account?' : "Don't have an account?"}
               </ClustrText>
               <Pressable onPress={toggleAuthMode} disabled={isLoading}>
-                <ClustrText 
-                  style={{
-                    color: colors.primary,
-                    fontSize: 14,
-                    fontWeight: '600',
-                    opacity: isLoading ? 0.5 : 1,
-                  }}
-                >
+                <ClustrText style={{ color: colors.primary, fontSize: 14, fontWeight: '600' }}>
                   {isSignUp ? 'Sign In' : 'Sign Up'}
                 </ClustrText>
               </Pressable>
             </View>
 
-            {/* Development Skip Button (Remove in production) */}
-            <View style={{
-              paddingHorizontal: responsive.cardPadding,
-              paddingBottom: 20,
-            }}>
-              <ClustrButton
-                variant="ghost"
-                onPress={() => onAuthSuccess && onAuthSuccess()}
-                style={{
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  backgroundColor: 'transparent'
-                }}
-              >
-                <ClustrText 
-                  variant="button" 
-                  style={{ 
-                    color: colors.textSecondary,
-                    fontSize: 16
-                  }}
-                >
+            {/* Skip Button */}
+            <View style={{ paddingHorizontal: 24, paddingBottom: 20 }}>
+              <ClustrButton variant="ghost" onPress={() => onAuthSuccess && onAuthSuccess()}>
+                <ClustrText style={{ color: colors.textSecondary }}>
                   Skip for now (Dev) →
                 </ClustrText>
               </ClustrButton>
             </View>
+
           </Animated.View>
         </ScrollView>
       </View>

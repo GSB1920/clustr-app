@@ -298,5 +298,5 @@ def google_config():
     Get Google OAuth configuration for frontend
     """
     return jsonify({
-        'google_client_id': current_app.config['GOOGLE_CLIENT_ID']
+        'google_client_id': current_app.config['GOOGLE_CLIENT_ID_WEB']  # Return WEB client ID
     }), 200

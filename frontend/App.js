@@ -143,8 +143,12 @@ const AppContent = () => {
     return <View style={{ flex: 1, backgroundColor: '#F8FAFC' }} />
   }
 
+  console.log('🎯 Current screen state:', currentScreen)
+  console.log('📱 About to render screen...')
+
   switch (currentScreen) {
     case 'welcome':
+      console.log('🏠 Rendering Welcome Screen')
       return (
         <WelcomeScreen 
           onGetStarted={handleGetStarted}
@@ -152,6 +156,7 @@ const AppContent = () => {
       )
     
     case 'auth':
+      console.log('🔐 Rendering Auth Screen')
       return (
         <AuthScreen 
           onAuthSuccess={handleAuthSuccess}
@@ -160,9 +165,11 @@ const AppContent = () => {
       )
     
     case 'main':
+      console.log('📊 Rendering Dashboard')
       return <DashboardScreen onLogout={handleLogout} user={user} />
     
     default:
+      console.log('🏠 Rendering Default Welcome Screen')
       return <MainApp />
   }
 }
