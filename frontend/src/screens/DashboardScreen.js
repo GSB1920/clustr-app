@@ -244,7 +244,7 @@ const CategoryFilter = ({ categories, selectedCategory, onSelectCategory }) => {
   )
 }
 
-export const DashboardScreen = ({ onLogout }) => {
+export const DashboardScreen = ({ onLogout, user }) => {
   const { colors } = useClustrTheme()
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -317,7 +317,9 @@ export const DashboardScreen = ({ onLogout }) => {
                 justifyContent: 'center',
                 alignItems: 'center'
               }}>
-                <ClustrText style={{ fontSize: 16 }}>👤</ClustrText>
+                <ClustrText style={{ fontSize: 16 }}>
+                  {user?.username ? user.username[0].toUpperCase() : '👤'}
+                </ClustrText>
               </Pressable>
             </View>
           </View>

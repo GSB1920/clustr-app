@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { ClustrThemeProvider, useClustrTheme } from './src/theme/ClustrTheme'
 import { WelcomeScreen } from './src/screens/WelcomeScreen'
 import { AuthScreen } from './src/screens/AuthScreen'
+import { DashboardScreen } from './src/screens/DashboardScreen'
 import { 
   ClustrButton, 
   ClustrInput, 
@@ -49,26 +50,28 @@ const MainApp = () => {
 }
 
 const AppContent = () => {
-  const [currentScreen, setCurrentScreen] = useState('loading') // 'loading', 'welcome', 'auth', 'main'
+  const [currentScreen, setCurrentScreen] = useState('loading')
   const [isLoading, setIsLoading] = useState(true)
+  const [user, setUser] = useState(null)
 
   useEffect(() => {
     checkAppState()
   }, [])
 
-  //Temp
   const checkAppState = async () => {
     try {
       // TEMPORARY: Clear storage to always start from welcome (for development)
-      await AsyncStorage.clear()
+      // await AsyncStorage.clear()  // Comment this out to keep login state
       
       const hasSeenWelcome = await AsyncStorage.getItem('hasSeenWelcome')
-      const isLoggedIn = await AsyncStorage.getItem('isLoggedIn')
+      const userToken = await AsyncStorage.getItem('userToken')
+      const userData = await AsyncStorage.getItem('userData')
       
       console.log('🔍 Debug - hasSeenWelcome:', hasSeenWelcome)
-      console.log('🔍 Debug - isLoggedIn:', isLoggedIn)
+      console.log('🔍 Debug - userToken:', userToken ? 'exists' : 'none')
       
-      if (isLoggedIn === 'true') {
+      if (userToken && userData) {
+        setUser(JSON.parse(userData))
         setCurrentScreen('main')
       } else if (hasSeenWelcome === 'true') {
         setCurrentScreen('auth')
@@ -83,6 +86,7 @@ const AppContent = () => {
       setIsLoading(false)
     }
   }
+
   const handleGetStarted = async () => {
     try {
       await AsyncStorage.setItem('hasSeenWelcome', 'true')
@@ -93,13 +97,41 @@ const AppContent = () => {
     }
   }
 
-  const handleAuthSuccess = async () => {
+  const handleAuthSuccess = async (authData = null) => {
     try {
-      await AsyncStorage.setItem('isLoggedIn', 'true')
-      setCurrentScreen('main')
+      if (authData) {
+        // Real authentication - save token and user data
+        await AsyncStorage.setItem('userToken', authData.token)
+        await AsyncStorage.setItem('userData', JSON.stringify(authData.user))
+        setUser(authData.user)
+        setCurrentScreen('main')
+      } else {
+        // Skip/Demo mode
+        await AsyncStorage.setItem('userToken', 'demo_token')
+        const demoUser = { 
+          id: 'demo',
+          name: 'Demo User', 
+          email: 'demo@clustr.com',
+          username: 'demo_user'
+        }
+        await AsyncStorage.setItem('userData', JSON.stringify(demoUser))
+        setUser(demoUser)
+        setCurrentScreen('main')
+      }
     } catch (error) {
       console.log('Error saving auth state:', error)
       setCurrentScreen('main')
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('userToken')
+      await AsyncStorage.removeItem('userData')
+      setUser(null)
+      setCurrentScreen('auth')
+    } catch (error) {
+      console.log('Error logging out:', error)
     }
   }
 
@@ -128,6 +160,8 @@ const AppContent = () => {
       )
     
     case 'main':
+      return <DashboardScreen onLogout={handleLogout} user={user} />
+    
     default:
       return <MainApp />
   }
