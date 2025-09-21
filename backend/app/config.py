@@ -16,7 +16,11 @@ class Config:
     
     CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*').split(',')
     
-    # Google OAuth Configuration
-    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID') or '13072093338-35prt0aj6VtOkepuaqekdf3donflbtro.apps.googleusercontent.com'
+    # Google OAuth Configuration - Support both Web and Android
+    GOOGLE_CLIENT_ID_WEB = os.environ.get('GOOGLE_CLIENT_ID_WEB') or '13072093338-35prt0aj6VtOkepuaqekdf3donflbtro.apps.googleusercontent.com'
+    GOOGLE_CLIENT_ID_ANDROID = os.environ.get('GOOGLE_CLIENT_ID_ANDROID') or '13072093338-eugco32ktmtnq2c6417i7tdh38s0mdt0.apps.googleusercontent.com'
     GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET') or 'GOCSPX-WhZlv7dqd25gwlPZzvQyYfW4ZQp'
     GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid_configuration"
+    
+    # For mobile apps, use Android client ID
+    GOOGLE_CLIENT_ID = GOOGLE_CLIENT_ID_ANDROID

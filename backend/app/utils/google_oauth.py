@@ -11,11 +11,17 @@ class GoogleOAuth:
         Verify Google ID token and return user info
         """
         try:
+            # Try both client IDs (web and android)
+            valid_client_ids = [
+                current_app.config['GOOGLE_CLIENT_ID_WEB'],
+                current_app.config['GOOGLE_CLIENT_ID_ANDROID']
+            ]
+            
             # Verify the token with Google
             idinfo = id_token.verify_oauth2_token(
                 token, 
                 google_requests.Request(), 
-                current_app.config['GOOGLE_CLIENT_ID']
+                audience=valid_client_ids  # Accept both client IDs
             )
             
             # Check if token is from correct issuer
