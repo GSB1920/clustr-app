@@ -166,6 +166,7 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
     }
   }
 
+  // Update handleGoogleAuth with detailed logging
   const handleGoogleAuth = async () => {
     if (isLoading) return
     
@@ -173,15 +174,26 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
     console.log('🔵 Starting Real Google OAuth...')
 
     try {
-      // Check if Google Play Services are available (Android)
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true })
+      console.log('🔧 Step 1: Configuring Google Sign-In...')
+      await configureGoogleSignIn()
       
-      // Sign in with Google
-      console.log('🔐 Initiating Google Sign-In...')
-      const googleUser = await GoogleSignin.signIn()
+      console.log('🔍 Step 2: Checking Google Play Services...')
+      const hasPlayServices = await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true })
+      console.log('✅ Google Play Services available:', hasPlayServices)
+      
+      console.log('�� Step 3: Initiating Google Sign-In...')
+      console.log('📱 About to call GoogleSignin.signIn()...')
+
+      // Add timeout to prevent infinite hang
+      const signInPromise = GoogleSignin.signIn()
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Google Sign-In timeout after 20 seconds - check configuration')), 20000)
+      )
+      
+      const googleUser = await Promise.race([signInPromise, timeoutPromise])
       console.log('✅ Google sign-in successful:', googleUser.user)
       
-      // Get the ID token
+      // Rest of your code...
       const idToken = googleUser.idToken
       
       if (!idToken) {
@@ -189,19 +201,14 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
       }
 
       console.log('🔐 Sending token to backend for verification...')
-      
-      // Send token to backend for verification and user creation/login
       const response = await authAPI.googleAuth(idToken, 'id_token')
       
       console.log('✅ Backend verification successful:', response.user)
       
-      // Save token and user data (same as email/password flow)
       await AsyncStorage.setItem('userToken', response.token)
       await AsyncStorage.setItem('userData', JSON.stringify(response.user))
       
       console.log('✅ Real Google OAuth complete - navigating to dashboard')
-      
-      // Navigate to dashboard
       onAuthSuccess(response)
 
     } catch (error) {
@@ -209,17 +216,14 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
       
       let errorMessage = 'Google authentication failed'
       
-      // Handle specific Google Sign-In errors
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+      if (error.message?.includes('timeout')) {
+        errorMessage = 'Google Sign-In timed out. Please check your SHA-1 configuration.'
+      } else if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         errorMessage = 'Google sign-in was cancelled'
       } else if (error.code === statusCodes.IN_PROGRESS) {
         errorMessage = 'Google sign-in is already in progress'
       } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
         errorMessage = 'Google Play Services not available'
-      } else if (error.message?.includes('Network request failed')) {
-        errorMessage = 'Network error - check your connection and backend'
-      } else if (error.message?.includes('Invalid Google token')) {
-        errorMessage = 'Google authentication failed - please try again'
       } else if (error.message) {
         errorMessage = error.message
       }
