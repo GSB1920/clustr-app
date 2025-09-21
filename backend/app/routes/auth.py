@@ -1,9 +1,10 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from app import db
 from app.models import User
 from datetime import datetime, timedelta
 import re
+from app.utils.google_oauth import GoogleOAuth
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
@@ -202,3 +203,100 @@ def change_password():
         db.session.rollback()
         print(f"Change password error: {str(e)}")
         return jsonify({'error': 'Internal server error'}), 500
+
+@auth_bp.route('/google', methods=['POST'])
+def google_oauth():
+    """
+    Handle Google OAuth authentication
+    Expects: { "token": "google_id_token_or_access_token", "token_type": "id_token" or "access_token" }
+    """
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        token = data.get('token')
+        token_type = data.get('token_type', 'id_token')
+        
+        if not token:
+            return jsonify({'error': 'Google token is required'}), 400
+        
+        # Verify Google token and get user info
+        if token_type == 'id_token':
+            google_user_info = GoogleOAuth.verify_google_token(token)
+        else:
+            google_user_info = GoogleOAuth.get_user_info_from_token(token)
+        
+        if not google_user_info:
+            return jsonify({'error': 'Invalid Google token'}), 401
+        
+        # Check if user already exists
+        existing_user = User.query.filter_by(email=google_user_info['email']).first()
+        
+        if existing_user:
+            # User exists - update OAuth info if needed and login
+            if not existing_user.oauth_provider:
+                # User signed up with email/password, now linking Google
+                existing_user.oauth_provider = 'google'
+                existing_user.oauth_id = google_user_info['google_id']
+                existing_user.avatar_url = google_user_info.get('picture', existing_user.avatar_url)
+                db.session.commit()
+            
+            # Update last login
+            existing_user.last_login = datetime.utcnow()
+            db.session.commit()
+            
+            # Generate token
+            token = existing_user.generate_token(expires_delta=timedelta(days=30))
+            
+            return jsonify({
+                'message': 'Google login successful',
+                'token': token,
+                'user': existing_user.to_dict()
+            }), 200
+        
+        else:
+            # New user - create account with Google info
+            # Generate username from email or name
+            username = User.generate_username_from_email(google_user_info['email'])
+            
+            user = User(
+                email=google_user_info['email'],
+                username=username,
+                oauth_provider='google',
+                oauth_id=google_user_info['google_id'],
+                avatar_url=google_user_info.get('picture'),
+                is_verified=google_user_info.get('email_verified', False)
+            )
+            
+            # Set name fields if available
+            if google_user_info.get('first_name') or google_user_info.get('last_name'):
+                # We'll need to add these fields to the User model, or store in a name field
+                pass
+            
+            db.session.add(user)
+            db.session.commit()
+            
+            # Generate token
+            token = user.generate_token(expires_delta=timedelta(days=30))
+            
+            return jsonify({
+                'message': 'Google account created successfully',
+                'token': token,
+                'user': user.to_dict()
+            }), 201
+    
+    except Exception as e:
+        db.session.rollback()
+        print(f"Google OAuth error: {str(e)}")
+        return jsonify({'error': 'Google authentication failed'}), 500
+
+@auth_bp.route('/google/config', methods=['GET'])
+def google_config():
+    """
+    Get Google OAuth configuration for frontend
+    """
+    return jsonify({
+        'google_client_id': current_app.config['GOOGLE_CLIENT_ID']
+    }), 200
