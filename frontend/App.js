@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { ClustrThemeProvider, useClustrTheme } from './src/theme/ClustrTheme'
 import { WelcomeScreen } from './src/screens/WelcomeScreen'
 import { AuthScreen } from './src/screens/AuthScreen'
+import { InterestScreen } from './src/screens/InterestScreen'
 import { DashboardScreen } from './src/screens/DashboardScreen'
 import { 
   ClustrButton, 
@@ -66,13 +67,22 @@ const AppContent = () => {
       const hasSeenWelcome = await AsyncStorage.getItem('hasSeenWelcome')
       const userToken = await AsyncStorage.getItem('userToken')
       const userData = await AsyncStorage.getItem('userData')
+      const hasSelectedInterests = await AsyncStorage.getItem('hasSelectedInterests')
       
       console.log('🔍 Debug - hasSeenWelcome:', hasSeenWelcome)
       console.log('🔍 Debug - userToken:', userToken ? 'exists' : 'none')
+      console.log('🔍 Debug - hasSelectedInterests:', hasSelectedInterests)
       
       if (userToken && userData) {
-        setUser(JSON.parse(userData))
-        setCurrentScreen('main')
+        const user = JSON.parse(userData)
+        setUser(user)
+        
+        // Check if user has selected interests
+        if (hasSelectedInterests === 'true') {
+          setCurrentScreen('main')
+        } else {
+          setCurrentScreen('interests')
+        }
       } else if (hasSeenWelcome === 'true') {
         setCurrentScreen('auth')
       } else {
@@ -104,7 +114,9 @@ const AppContent = () => {
         await AsyncStorage.setItem('userToken', authData.token)
         await AsyncStorage.setItem('userData', JSON.stringify(authData.user))
         setUser(authData.user)
-        setCurrentScreen('main')
+        
+        // After successful auth, go to interests selection
+        setCurrentScreen('interests')
       } else {
         // Skip/Demo mode
         await AsyncStorage.setItem('userToken', 'demo_token')
@@ -116,11 +128,26 @@ const AppContent = () => {
         }
         await AsyncStorage.setItem('userData', JSON.stringify(demoUser))
         setUser(demoUser)
-        setCurrentScreen('main')
+        
+        // Demo mode also needs interests
+        setCurrentScreen('interests')
       }
     } catch (error) {
       console.log('Error saving auth state:', error)
+      setCurrentScreen('interests') // Fallback to interests
+    }
+  }
+
+  const handleInterestsSelected = async (interests) => {
+    try {
+      console.log('✅ User selected interests:', interests)
+      
+      // Mark interests as completed and go to main app
+      await AsyncStorage.setItem('hasSelectedInterests', 'true')
       setCurrentScreen('main')
+    } catch (error) {
+      console.log('Error handling interests:', error)
+      setCurrentScreen('main') // Proceed anyway
     }
   }
 
@@ -128,6 +155,8 @@ const AppContent = () => {
     try {
       await AsyncStorage.removeItem('userToken')
       await AsyncStorage.removeItem('userData')
+      await AsyncStorage.removeItem('hasSelectedInterests')
+      await AsyncStorage.removeItem('userInterests')
       setUser(null)
       setCurrentScreen('auth')
     } catch (error) {
@@ -161,6 +190,15 @@ const AppContent = () => {
         <AuthScreen 
           onAuthSuccess={handleAuthSuccess}
           onGoBack={handleBackToWelcome}
+        />
+      )
+    
+    case 'interests':
+      console.log('🎯 Rendering Interest Selection Screen')
+      return (
+        <InterestScreen 
+          onInterestsSelected={handleInterestsSelected}
+          user={user}
         />
       )
     

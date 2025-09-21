@@ -120,6 +120,23 @@ export const authAPI = {
       method: 'GET',
     })
   },
+
+  // Update user interests
+  updateUserInterests: async (interests, token) => {
+    console.log('🎯 Updating interests:', interests)
+    console.log('🔑 Using token:', token ? 'exists' : 'missing')
+    
+    return await apiRequest('/auth/interests', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        interests: interests
+      }),
+    })
+  },
 }
 
 // Update healthCheck function

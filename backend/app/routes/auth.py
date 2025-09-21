@@ -300,3 +300,67 @@ def google_config():
     return jsonify({
         'google_client_id': current_app.config['GOOGLE_CLIENT_ID_WEB']  # Return WEB client ID
     }), 200
+
+@auth_bp.route('/interests', methods=['POST'])
+@jwt_required()
+def update_user_interests():
+    """
+    Update user interests - saves to USER_INTEREST table
+    Expects: { "interests": ["sports", "food", "music", ...] }
+    """
+    try:
+        data = request.get_json()
+        user_id = get_jwt_identity()
+        
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        interests = data.get('interests', [])
+        
+        if not interests or not isinstance(interests, list):
+            return jsonify({'error': 'Interests must be provided as an array'}), 400
+        
+        if len(interests) < 3:
+            return jsonify({'error': 'At least 3 interests are required'}), 400
+        
+        # Get the user
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Update user's interests field directly
+        user.interests = interests
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Interests updated successfully',
+            'interests': interests,
+            'user': user.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Update interests error: {str(e)}")
+        return jsonify({'error': 'Failed to update interests'}), 500
+
+@auth_bp.route('/interests', methods=['GET'])
+@jwt_required()
+def get_user_interests():
+    """
+    Get user's current interests
+    """
+    try:
+        user_id = get_jwt_identity()
+        user = User.query.get(user_id)
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        return jsonify({
+            'interests': user.interests or [],
+            'user': user.to_dict()
+        }), 200
+        
+    except Exception as e:
+        print(f"Get interests error: {str(e)}")
+        return jsonify({'error': 'Failed to get interests'}), 500
