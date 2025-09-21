@@ -6,14 +6,14 @@ const YOUR_COMPUTER_IP = '192.168.1.9'  // Define this at the top
 const getAPIBaseURL = () => {
   if (__DEV__) {
     if (Platform.OS === 'ios') {
-      return 'http://localhost:5001/api'  // iOS Simulator
+      return 'http://localhost:5001/api'  // For both email auth AND Google OAuth
     } else if (Platform.OS === 'android') {
-      return `http://${YOUR_COMPUTER_IP}:5001/api`  // Use actual IP for Android
+      return 'http://10.0.2.2:5001/api'   // Android emulator localhost mapping
     } else {
       return 'http://localhost:5001/api'   // Web
     }
   }
-  return `http://${YOUR_COMPUTER_IP}:5001/api`
+  return 'http://localhost:5001/api'  // Production
 }
 
 const API_BASE_URL = getAPIBaseURL()
@@ -105,6 +105,24 @@ export const authAPI = {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
+    })
+  },
+
+  // Google OAuth
+  googleAuth: async (googleToken, tokenType = 'id_token') => {
+    return await apiRequest('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({
+        token: googleToken,
+        token_type: tokenType,
+      }),
+    })
+  },
+
+  // Get Google OAuth config
+  getGoogleConfig: async () => {
+    return await apiRequest('/auth/google/config', {
+      method: 'GET',
     })
   },
 }

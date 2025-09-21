@@ -15,6 +15,7 @@ import { ClustrText, ClustrButton, ClustrInput, ClustrCard } from '../components
 import { authAPI } from '../services/api'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { GoogleIcon } from '../components/GoogleIcon'
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin'
 
 const { width, height } = Dimensions.get('window')
 
@@ -64,6 +65,28 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
       })
     ]).start()
   }, [])
+
+  useEffect(() => {
+    configureGoogleSignIn()
+  }, [])
+
+  const configureGoogleSignIn = async () => {
+    try {
+      // Get Google config from backend
+      const config = await authAPI.getGoogleConfig()
+      
+      GoogleSignin.configure({
+        webClientId: config.google_client_id, // Your actual Google Client ID
+        offlineAccess: true,
+        hostedDomain: '', // Optional - restrict to specific domain
+        forceCodeForRefreshToken: true,
+      })
+      
+      console.log('✅ Google Sign-In configured with client ID:', config.google_client_id)
+    } catch (error) {
+      console.error('❌ Google Sign-In configuration failed:', error)
+    }
+  }
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -144,12 +167,67 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
   }
 
   const handleGoogleAuth = async () => {
-    console.log('🔵 Google OAuth initiated')
-    Alert.alert(
-      'Google OAuth', 
-      'Google authentication will be implemented in the next phase!',
-      [{ text: 'OK' }]
-    )
+    if (isLoading) return
+    
+    setIsLoading(true)
+    console.log('🔵 Starting Real Google OAuth...')
+
+    try {
+      // Check if Google Play Services are available (Android)
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true })
+      
+      // Sign in with Google
+      console.log('🔐 Initiating Google Sign-In...')
+      const googleUser = await GoogleSignin.signIn()
+      console.log('✅ Google sign-in successful:', googleUser.user)
+      
+      // Get the ID token
+      const idToken = googleUser.idToken
+      
+      if (!idToken) {
+        throw new Error('No ID token received from Google')
+      }
+
+      console.log('🔐 Sending token to backend for verification...')
+      
+      // Send token to backend for verification and user creation/login
+      const response = await authAPI.googleAuth(idToken, 'id_token')
+      
+      console.log('✅ Backend verification successful:', response.user)
+      
+      // Save token and user data (same as email/password flow)
+      await AsyncStorage.setItem('userToken', response.token)
+      await AsyncStorage.setItem('userData', JSON.stringify(response.user))
+      
+      console.log('✅ Real Google OAuth complete - navigating to dashboard')
+      
+      // Navigate to dashboard
+      onAuthSuccess(response)
+
+    } catch (error) {
+      console.error('�� Google OAuth error:', error)
+      
+      let errorMessage = 'Google authentication failed'
+      
+      // Handle specific Google Sign-In errors
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        errorMessage = 'Google sign-in was cancelled'
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        errorMessage = 'Google sign-in is already in progress'
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        errorMessage = 'Google Play Services not available'
+      } else if (error.message?.includes('Network request failed')) {
+        errorMessage = 'Network error - check your connection and backend'
+      } else if (error.message?.includes('Invalid Google token')) {
+        errorMessage = 'Google authentication failed - please try again'
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+      
+      Alert.alert('Google Sign-In Error', errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const toggleAuthMode = () => {

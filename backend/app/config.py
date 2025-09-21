@@ -17,6 +17,6 @@ class Config:
     CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*').split(',')
     
     # Google OAuth Configuration
-    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID') or 'your-google-client-id-here'
-    GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET') or 'your-google-client-secret-here'
+    GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID') or '13072093338-35prt0aj6VtOkepuaqekdf3donflbtro.apps.googleusercontent.com'
+    GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET') or 'GOCSPX-WhZlv7dqd25gwlPZzvQyYfW4ZQp'
     GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid_configuration"
