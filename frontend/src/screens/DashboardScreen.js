@@ -340,7 +340,7 @@ export const DashboardScreen = ({ onLogout, user }) => {
               onChangeText={setSearchQuery}
               style={{
                 color: colors.text,
-                fontSize: 16,
+                fontSize: 13,
                 fontFamily: 'System'
               }}
             />
