@@ -429,6 +429,32 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
                 </ClustrText>
               </Pressable>
             </View>
+
+            {/* Skip Button for Testing */}
+            <View style={{
+              paddingHorizontal: responsive.cardPadding,
+              paddingBottom: 20,
+            }}>
+              <ClustrButton
+                variant="ghost"
+                onPress={() => onAuthSuccess && onAuthSuccess()}
+                style={{
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  backgroundColor: 'transparent'
+                }}
+              >
+                <ClustrText 
+                  variant="button" 
+                  style={{ 
+                    color: colors.textSecondary,
+                    fontSize: 16
+                  }}
+                >
+                  Skip for now →
+                </ClustrText>
+              </ClustrButton>
+            </View>
           </Animated.View>
         </ScrollView>
       </View>
