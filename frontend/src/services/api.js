@@ -1,7 +1,7 @@
 import { Platform } from 'react-native'
 
-// ngrok URL for testing
-const NGROK_URL = 'https://ac0150d88af7.ngrok-free.app'
+// Update with your NEW ngrok URL
+const NGROK_URL = 'https://e3041c2241b9.ngrok-free.app'
 
 const getAPIBaseURL = () => {
   if (__DEV__) {

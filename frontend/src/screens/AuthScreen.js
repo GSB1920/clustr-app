@@ -14,6 +14,9 @@ import { useClustrTheme } from '../theme/ClustrTheme'
 import { ClustrText, ClustrButton, ClustrInput, ClustrCard } from '../components/ui'
 import { authAPI } from '../services/api'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { GoogleIcon } from '../components/GoogleIcon'
+import * as AuthSession from 'expo-auth-session'
+import * as WebBrowser from 'expo-web-browser'
 
 const { width, height } = Dimensions.get('window')
 
@@ -125,6 +128,71 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
     }
   }
 
+  // Standard Expo AuthSession configuration
+  const handleGoogleAuth = async () => {
+    if (isLoading) return
+    
+    setIsLoading(true)
+    console.log('🔵 Starting Expo Google OAuth...')
+
+    try {
+      const config = await authAPI.getGoogleConfig()
+      console.log('✅ Google config loaded:', config.google_client_id)
+      
+      // Standard Expo proxy approach - no custom URIs needed
+      const redirectUri = AuthSession.makeRedirectUri({
+        useProxy: true, // This is the standard way
+      })
+      
+      console.log('🔐 Redirect URI:', redirectUri)
+      
+      const request = new AuthSession.AuthRequest({
+        clientId: config.google_client_id, // Web Client ID (standard)
+        scopes: ['openid', 'profile', 'email'],
+        responseType: AuthSession.ResponseType.IdToken,
+        redirectUri: redirectUri,
+      })
+
+      console.log('🚀 Opening Google authentication...')
+      
+      const result = await request.promptAsync({
+        authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+      })
+
+      console.log('📱 Auth result:', result.type)
+
+      if (result.type === 'success') {
+        const idToken = result.params.id_token
+        
+        if (!idToken) {
+          throw new Error('No ID token received from Google')
+        }
+
+        console.log('🔐 Sending token to backend for verification...')
+        
+        const response = await authAPI.googleAuth(idToken, 'id_token')
+        console.log('✅ Backend verification successful:', response.user)
+        
+        await AsyncStorage.setItem('userToken', response.token)
+        await AsyncStorage.setItem('userData', JSON.stringify(response.user))
+        
+        console.log('✅ Expo Google OAuth complete')
+        onAuthSuccess(response)
+
+      } else if (result.type === 'cancel') {
+        console.log('ℹ️ Google sign-in cancelled')
+      } else {
+        throw new Error('Google authentication failed')
+      }
+
+    } catch (error) {
+      console.error('�� Google OAuth error:', error)
+      Alert.alert('Google OAuth Error', error.message || 'Authentication failed')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const toggleAuthMode = () => {
     setIsSignUp(!isSignUp)
     setFormData({
@@ -230,6 +298,50 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
                     : (isSignUp ? 'Create Account' : 'Sign In')
                   }
                 </ClustrText>
+              </ClustrButton>
+            </ClustrCard>
+
+            {/* OAuth Divider */}
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginHorizontal: 24,
+              marginVertical: 20,
+            }}>
+              <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+              <ClustrText style={{ marginHorizontal: 16, color: colors.textSecondary, fontSize: 14 }}>
+                or
+              </ClustrText>
+              <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+            </View>
+
+            {/* Google OAuth Button */}
+            <ClustrCard style={{ marginHorizontal: 24, padding: 24, marginBottom: 20 }}>
+              <ClustrButton
+                variant="ghost"
+                onPress={handleGoogleAuth}
+                disabled={isLoading}
+                style={{
+                  borderWidth: 2,
+                  borderColor: colors.border,
+                  backgroundColor: colors.background,
+                  opacity: isLoading ? 0.7 : 1,
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                  <GoogleIcon size={20} />
+                  <ClustrText 
+                    variant="button" 
+                    style={{ 
+                      color: colors.text,
+                      fontSize: 16,
+                      fontWeight: '500',
+                      marginLeft: 12
+                    }}
+                  >
+                    {isLoading ? 'Connecting to Google...' : 'Continue with Google'}
+                  </ClustrText>
+                </View>
               </ClustrButton>
             </ClustrCard>
 
