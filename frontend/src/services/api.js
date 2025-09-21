@@ -1,19 +1,14 @@
 import { Platform } from 'react-native'
 
-// API Configuration - Fixed version
-const YOUR_COMPUTER_IP = '192.168.1.9'  // Define this at the top
+// ngrok URL for testing
+const NGROK_URL = 'https://ac0150d88af7.ngrok-free.app'
 
 const getAPIBaseURL = () => {
   if (__DEV__) {
-    if (Platform.OS === 'ios') {
-      return 'http://localhost:5001/api'  // For both email auth AND Google OAuth
-    } else if (Platform.OS === 'android') {
-      return 'http://10.0.2.2:5001/api'   // Android emulator localhost mapping
-    } else {
-      return 'http://localhost:5001/api'   // Web
-    }
+    // Use ngrok for all platforms to test Google OAuth
+    return `${NGROK_URL}/api`
   }
-  return 'http://localhost:5001/api'  // Production
+  return `${NGROK_URL}/api`
 }
 
 const API_BASE_URL = getAPIBaseURL()
@@ -127,10 +122,10 @@ export const authAPI = {
   },
 }
 
-// Health Check - Fixed
+// Update healthCheck function
 export const healthCheck = async () => {
   try {
-    const baseURL = `http://${YOUR_COMPUTER_IP}:5001`  // Use the defined variable
+    const baseURL = NGROK_URL
     console.log('🏥 Health check:', baseURL)
     
     const response = await fetch(baseURL)
@@ -140,6 +135,6 @@ export const healthCheck = async () => {
     return data
   } catch (error) {
     console.error('💔 Backend not available:', error)
-    throw new Error(`Backend server is not running at http://${YOUR_COMPUTER_IP}:5001`)
+    throw new Error(`Backend server is not running at ${NGROK_URL}`)
   }
 }
