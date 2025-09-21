@@ -14,6 +14,7 @@ import { useClustrTheme } from '../theme/ClustrTheme'
 import { ClustrText, ClustrButton, ClustrInput, ClustrCard } from '../components/ui'
 import { authAPI } from '../services/api'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { GoogleIcon } from '../components/GoogleIcon'
 
 const { width, height } = Dimensions.get('window')
 
@@ -140,6 +141,15 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleGoogleAuth = async () => {
+    console.log('🔵 Google OAuth initiated')
+    Alert.alert(
+      'Google OAuth', 
+      'Google authentication will be implemented in the next phase!',
+      [{ text: 'OK' }]
+    )
   }
 
   const toggleAuthMode = () => {
@@ -314,6 +324,73 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
                     : (isSignUp ? 'Create Account' : 'Sign In')
                   }
                 </ClustrText>
+              </ClustrButton>
+            </ClustrCard>
+
+            {/* OAuth Divider */}
+            <View style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginHorizontal: responsive.cardPadding,
+              marginVertical: responsive.sectionSpacing,
+            }}>
+              <View style={{
+                flex: 1,
+                height: 1,
+                backgroundColor: colors.border,
+              }} />
+              <ClustrText style={{
+                marginHorizontal: 16,
+                color: colors.textSecondary,
+                fontSize: 14,
+              }}>
+                or
+              </ClustrText>
+              <View style={{
+                flex: 1,
+                height: 1,
+                backgroundColor: colors.border,
+              }} />
+            </View>
+
+            {/* Google OAuth Button */}
+            <ClustrCard style={{
+              marginHorizontal: responsive.cardPadding,
+              padding: responsive.cardPadding,
+              marginBottom: responsive.sectionSpacing,
+            }}>
+              <ClustrButton
+                variant="ghost"
+                onPress={handleGoogleAuth}
+                disabled={isLoading}
+                style={{
+                  borderWidth: 2,
+                  borderColor: colors.border,
+                  backgroundColor: colors.background,
+                  opacity: isLoading ? 0.7 : 1,
+                }}
+              >
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <GoogleIcon size={20} />
+                  <ClustrText 
+                    variant="button" 
+                    style={{ 
+                      color: colors.text,
+                      fontSize: 16,
+                      fontWeight: '500',
+                      marginLeft: 12
+                    }}
+                  >
+                    {isLoading 
+                      ? 'Connecting to Google...' 
+                      : `Continue with Google`
+                    }
+                  </ClustrText>
+                </View>
               </ClustrButton>
             </ClustrCard>
 
