@@ -50,34 +50,45 @@ This project is a full-stack implementation for a frontend-focused assignment. T
 6.  Start the server: `python run.py`
 7.  The API will be available at `http://localhost:5001`.
 
-## 🌐 **PRODUCTION DEPLOYMENT (FREE)**
+## 🌐 **PRODUCTION APP - Ready to Use!**
 
-### **🚀 Live Demo URLs**
-- **Backend API**: [https://clustr-api.railway.app](https://clustr-api.railway.app)
-- **API Health**: [https://clustr-api.railway.app/api/health](https://clustr-api.railway.app/api/health)
-- **Frontend Web**: `npx expo start --web` (connects to production API)
+### **🚀 Live Production URLs**
+- **Backend API**: [https://renewed-wisdom-production.up.railway.app](https://renewed-wisdom-production.up.railway.app)
+- **API Health**: [https://renewed-wisdom-production.up.railway.app/api/health](https://renewed-wisdom-production.up.railway.app/api/health)
 
-### **💰 Deployment Cost: $0.00**
-- **Backend**: Railway.app (500 hours free + PostgreSQL)
-- **Frontend**: Expo Web (unlimited free)
-- **Database**: PostgreSQL included with Railway
-- **SSL**: Automatic HTTPS certificates
+### **📱 Use the Production App (No Setup Required)**
 
-### **📱 Try the App**
+#### **Option 1: Mobile App (Recommended)**
+1. **Install Expo Go** on your phone from Play Store/App Store
+2. **Run the production app**:
+   ```bash
+   cd frontend
+   npx expo start
+   ```
+3. **Scan QR code** with Expo Go app
+4. **App loads instantly** - connects to live production backend!
+
+#### **Option 2: Web App**
 ```bash
-# 1. Test the live backend API
-curl https://clustr-api.railway.app/api/health
-
-# 2. Run frontend connected to production
-cd frontend && npx expo start --web
+cd frontend
+npx expo start --web
 # Opens at: http://localhost:19006
-
-# 3. Or use mobile with Expo Go
-cd frontend && npx expo start
-# Scan QR code with Expo Go app
+# Works in any browser, connects to production API
 ```
 
-**📋 Complete deployment guide**: [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md)
+### **✅ Production Features**
+- **Live Backend**: Real production API with SQLite database
+- **Real-time Chat**: Socket.IO messaging
+- **Push Notifications**: In-app notification system
+- **User Authentication**: Google OAuth
+- **Event Management**: Create, join, leave events
+- **Cross-platform**: Works on iOS, Android, and web
+
+### **💰 Production Cost: $0.00**
+- **Backend**: Railway.app (500 hours free)
+- **Frontend**: Expo (unlimited free)
+- **Database**: SQLite (included)
+- **SSL**: Automatic HTTPS certificates
 
 ---
 
