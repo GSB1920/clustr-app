@@ -5,10 +5,10 @@ import { useClustrTheme } from '../theme/ClustrTheme'
 // SINGLE SOURCE OF TRUTH FOR CLUSTR LOGO
 const LOGO_CONFIG = {
   // Set this to true when you have the actual logo file
-  useActualLogo: true,
+  useActualLogo: false,
   
   // Path to your actual logo (only used when useActualLogo is true)
-  logoPath: require('../../assets/clustr-logo.png'), // Update this path to match your logo file
+  // logoPath: require('../../assets/clustr-logo.png'), // Update this path to match your logo file
   
   // Placeholder configuration
   placeholder: {
