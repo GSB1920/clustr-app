@@ -427,7 +427,7 @@ export const DashboardScreen = ({ onLogout, user }) => {
         <StatusBar backgroundColor={colors.surface} barStyle="dark-content" />
         
         <Animated.View style={{ 
-          flex: 1, 
+          flexShrink: 0,  // ✅ Add this instead
           opacity: fadeAnim,
           transform: [{ translateY: slideAnim }]
         }}>
@@ -549,7 +549,8 @@ export const DashboardScreen = ({ onLogout, user }) => {
 
         {/* Navigation Tabs */}
         <View style={{
-          paddingVertical: 20,
+          paddingTop: 12,      // Reduced top padding
+          paddingBottom: 8,    // Minimal bottom padding  
           paddingLeft: 20
         }}>
           <ScrollView 
@@ -571,7 +572,10 @@ export const DashboardScreen = ({ onLogout, user }) => {
         <ScrollView
           style={{ flex: 1 }}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={{ 
+            paddingBottom: 20,
+            paddingTop: 8  // Add small top padding
+          }}
         >
           {isLoading ? (
             <View style={{
