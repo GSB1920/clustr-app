@@ -159,28 +159,38 @@ def join_event(event_id):
         if not event:
             return jsonify({'error': 'Event not found'}), 404
         
-        # Check if event is full
-        current_attendees = len(event.attendees) if event.attendees else 0
-        if current_attendees >= event.max_attendees:
-            return jsonify({'error': 'Event is full'}), 400
-        
-        # Check if user already joined
-        if event.attendees and user_id in event.attendees:
-            return jsonify({'error': 'You have already joined this event'}), 400
-        
-        # Add user to attendees
+        # Initialize attendees if None
         if not event.attendees:
             event.attendees = []
-        event.attendees = event.attendees + [user_id]
         
+        # Check if user already joined
+        if user_id in event.attendees:
+            return jsonify({
+                'error': 'You have already joined this event',
+                'event': event.to_dict()
+            }), 400
+        
+        # Check if event is full
+        current_attendees = len(event.attendees)
+        if current_attendees >= event.max_attendees:
+            return jsonify({
+                'error': 'Event is full',
+                'event': event.to_dict()
+            }), 400
+        
+        # Add user to attendees
+        event.attendees = event.attendees + [user_id]
         db.session.commit()
+        
+        print(f"✅ User {user_id} joined event '{event.title}' (now {len(event.attendees)} attendees)")
         
         return jsonify({
             'message': 'Successfully joined event',
-            'event': event.to_dict()
+            'event': event.to_dict(),
+            'user_joined': True
         }), 200
         
     except Exception as e:
         db.session.rollback()
-        print(f"Join event error: {str(e)}")
+        print(f"❌ Join event error: {str(e)}")
         return jsonify({'error': 'Failed to join event'}), 500

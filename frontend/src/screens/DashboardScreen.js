@@ -108,6 +108,7 @@ export const DashboardScreen = ({ onLogout, user }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [events, setEvents] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [joiningEvents, setJoiningEvents] = useState(new Set()) // Track loading states
   const fadeAnim = useRef(new Animated.Value(0)).current
   const slideAnim = useRef(new Animated.Value(50)).current
 
@@ -127,6 +128,12 @@ export const DashboardScreen = ({ onLogout, user }) => {
       })
     ]).start()
   }, [])
+
+  // Add debugging to check user
+  useEffect(() => {
+    console.log('👤 Current user:', user?.id ? 'logged in' : 'not logged in')
+    console.log('👤 User ID:', user?.id)
+  }, [user])
 
   const fetchEvents = async () => {
     try {
@@ -161,6 +168,9 @@ export const DashboardScreen = ({ onLogout, user }) => {
   const filteredEvents = events // Events are already filtered by backend
 
   const handleJoinEvent = async (eventId) => {
+    // Prevent multiple clicks
+    if (joiningEvents.has(eventId)) return
+    
     try {
       const userToken = await AsyncStorage.getItem('userToken')
       if (!userToken) {
@@ -168,16 +178,28 @@ export const DashboardScreen = ({ onLogout, user }) => {
         return
       }
 
-      console.log('🤝 Joining event:', eventId)
-      await eventsAPI.joinEvent(eventId, userToken)
+      // Add to loading state
+      setJoiningEvents(prev => new Set([...prev, eventId]))
       
-      // Refresh events list
+      console.log('🤝 Joining event:', eventId)
+      const response = await eventsAPI.joinEvent(eventId, userToken)
+      
+      console.log('✅ Join response:', response)
+      
+      // Refresh events list to show updated attendee count
       fetchEvents()
       
       Alert.alert('Success', 'You have joined the event!')
     } catch (error) {
       console.error('❌ Join event error:', error)
       Alert.alert('Error', error.message || 'Failed to join event')
+    } finally {
+      // Remove from loading state
+      setJoiningEvents(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(eventId)
+        return newSet
+      })
     }
   }
 
@@ -364,24 +386,68 @@ export const DashboardScreen = ({ onLogout, user }) => {
             </View>
           </View>
 
-          <ClustrButton
-            variant="primary"
-            style={{
-              paddingHorizontal: 24,
-              paddingVertical: 12,
-              borderRadius: 25,
-              minWidth: 80
-            }}
-            onPress={() => handleJoinEvent(event.id)}
-          >
-            <ClustrText style={{
-              fontSize: 14,
-              fontWeight: '600',
-              color: colors.surface
-            }}>
-              Join
-            </ClustrText>
-          </ClustrButton>
+          {/* Smart Join Button */}
+          {(() => {
+            const isJoining = joiningEvents.has(event.id)
+            const currentUserId = user?.id
+            const hasUserJoined = event.attendees && event.attendees.includes(currentUserId)
+            const isEventFull = (event.attendee_count || 0) >= event.max_attendees
+            
+            // Determine button state
+            let buttonConfig = {
+              text: 'Join',
+              backgroundColor: colors.primary,
+              textColor: colors.surface,
+              disabled: false
+            }
+            
+            if (isJoining) {
+              buttonConfig = {
+                text: 'Joining...',
+                backgroundColor: colors.primary + '80',
+                textColor: colors.surface,
+                disabled: true
+              }
+            } else if (hasUserJoined) {
+              buttonConfig = {
+                text: 'Joined ✓',
+                backgroundColor: '#10B981',
+                textColor: colors.surface,
+                disabled: true
+              }
+            } else if (isEventFull) {
+              buttonConfig = {
+                text: 'Full',
+                backgroundColor: colors.textSecondary + '40',
+                textColor: colors.textSecondary,
+                disabled: true
+              }
+            }
+            
+            return (
+              <ClustrButton
+                variant="primary"
+                disabled={buttonConfig.disabled}
+                style={{
+                  paddingHorizontal: 24,
+                  paddingVertical: 12,
+                  borderRadius: 25,
+                  minWidth: 80,
+                  backgroundColor: buttonConfig.backgroundColor,
+                  opacity: buttonConfig.disabled ? 0.7 : 1
+                }}
+                onPress={() => !buttonConfig.disabled && handleJoinEvent(event.id)}
+              >
+                <ClustrText style={{
+                  fontSize: 14,
+                  fontWeight: '600',
+                  color: buttonConfig.textColor
+                }}>
+                  {buttonConfig.text}
+                </ClustrText>
+              </ClustrButton>
+            )
+          })()}
         </View>
       </ClustrCard>
     )
