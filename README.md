@@ -26,49 +26,68 @@ This project is a full-stack implementation for a frontend-focused assignment. T
 - Reviews and Ratings System
 - Admin Dashboard (Web)
 
-## 🛠️ Setup Instructions
+## 🛠️ Development Setup
 
 ### Prerequisites
-- Node.js & npm
-- Python 3.9+
-- Git
+- **Node.js 18+** and npm
+- **Python 3.9+**
+- **Git**
+- **Expo Go app** on your phone (for mobile testing)
 
-### Frontend (React Native - Expo)
-1.  Navigate to the project root: `cd clustr-app`
-2.  Install dependencies: `npm install`
-3.  Start the development server: `npx expo start`
-4.  Scan the QR code with the Expo Go app on your phone.
+### Quick Setup Commands
+```bash
+# 1. Clone repository
+git clone https://github.com/GSB1920/clustr-app.git
+cd clustr-app
 
-### Backend (Python - Flask)
-1.  Navigate to the backend directory: `cd backend`
-2.  Create a virtual environment: `python -m venv venv`
-3.  Activate the virtual environment:
-    - On macOS/Linux: `source venv/bin/activate`
-    - On Windows: `.\venv\Scripts\activate`
-4.  Install dependencies: `pip install -r requirements.txt`
-5.  Initialize database: `python recreate_db.py`
-6.  Start the server: `python run.py`
-7.  The API will be available at `http://localhost:5001`.
+# 2. Backend setup
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+pip install -r requirements.txt
+python recreate_db.py
+python run.py
 
-## 🌐 **PRODUCTION APP - Ready to Use!**
+# 3. Frontend setup (new terminal)
+cd frontend
+npm install
+npx expo start
+```
+
+### Development URLs
+- **Backend**: `http://localhost:5001`
+- **Frontend**: Scan QR code with Expo Go app
+
+## 🌐 **PRODUCTION APP - Use Right Now!**
+
+### **Prerequisites for Production Use**
+- **Node.js 18+** and npm
+- **Expo Go app** on your phone (free from Play Store/App Store)
 
 ### **🚀 Live Production URLs**
 - **Backend API**: [https://renewed-wisdom-production.up.railway.app](https://renewed-wisdom-production.up.railway.app)
 - **API Health**: [https://renewed-wisdom-production.up.railway.app/api/health](https://renewed-wisdom-production.up.railway.app/api/health)
 
-### **📱 Use the Production App (No Setup Required)**
+### **📱 Use Production App (2 Simple Steps)**
 
-#### **Option 1: Mobile App (Recommended)**
-1. **Install Expo Go** on your phone from Play Store/App Store
-2. **Run the production app**:
-   ```bash
-   cd frontend
-   npx expo start
-   ```
-3. **Scan QR code** with Expo Go app
-4. **App loads instantly** - connects to live production backend!
+#### **Step 1: Install Expo Go**
+- Download **Expo Go** from Play Store (Android) or App Store (iOS)
 
-#### **Option 2: Web App**
+#### **Step 2: Run Production App**
+```bash
+# Clone and run (connects to live backend automatically)
+git clone https://github.com/GSB1920/clustr-app.git
+cd clustr-app/frontend
+npm install
+npx expo start
+```
+
+#### **Step 3: Scan QR Code**
+- Open **Expo Go** app on your phone
+- **Scan the QR code** from terminal
+- **App loads instantly** - connects to live production backend!
+
+### **🌐 Web Version (Alternative)**
 ```bash
 cd frontend
 npx expo start --web
