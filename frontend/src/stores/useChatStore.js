@@ -38,8 +38,10 @@ const chatAPI = {
   }
 }
 
-// Get API base URL (should match your API service)
-const API_BASE_URL = 'https://daa6fa6b3b0e.ngrok-free.app/api'
+// API configuration (matching main API service)
+const NGROK_URL = 'https://daa6fa6b3b0e.ngrok-free.app'
+const API_BASE_URL = `${NGROK_URL}/api`
+const SOCKET_URL = NGROK_URL // For Socket.IO connection
 
 export const useChatStore = create((set, get) => ({
   // Chat state
@@ -67,7 +69,7 @@ export const useChatStore = create((set, get) => ({
         return
       }
       
-      const socket = io(API_BASE_URL.replace('/api', ''), {
+      const socket = io(SOCKET_URL, {
         auth: { token },
         transports: ['websocket', 'polling']
       })
