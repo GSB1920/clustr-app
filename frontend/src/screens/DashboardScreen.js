@@ -13,6 +13,7 @@ import {
 } from 'react-native'
 import { useClustrTheme } from '../theme/ClustrTheme'
 import { ClustrText, ClustrButton, ClustrCard } from '../components/ui'
+import { EventDetailsModal } from '../components/EventDetailsModal'
 import { eventsAPI } from '../services/api'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
@@ -109,6 +110,8 @@ export const DashboardScreen = ({ onLogout, user }) => {
   const [events, setEvents] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [joiningEvents, setJoiningEvents] = useState(new Set()) // Track loading states
+  const [selectedEvent, setSelectedEvent] = useState(null) // For modal
+  const [showEventModal, setShowEventModal] = useState(false)
   const fadeAnim = useRef(new Animated.Value(0)).current
   const slideAnim = useRef(new Animated.Value(50)).current
 
@@ -189,7 +192,17 @@ export const DashboardScreen = ({ onLogout, user }) => {
       // Refresh events list to show updated attendee count
       fetchEvents()
       
-      Alert.alert('Success', 'You have joined the event!')
+      Alert.alert('Success', 'You have joined the event!', [
+        {
+          text: 'OK',
+          onPress: () => {
+            // Close modal after user acknowledges success
+            if (showEventModal) {
+              handleCloseModal()
+            }
+          }
+        }
+      ])
     } catch (error) {
       console.error('❌ Join event error:', error)
       Alert.alert('Error', error.message || 'Failed to join event')
@@ -203,22 +216,101 @@ export const DashboardScreen = ({ onLogout, user }) => {
     }
   }
 
+  const handleLeaveEvent = async (eventId) => {
+    // Prevent multiple clicks
+    if (joiningEvents.has(eventId)) return
+    
+    try {
+      const userToken = await AsyncStorage.getItem('userToken')
+      if (!userToken) {
+        Alert.alert('Authentication Required', 'Please log in to manage events')
+        return
+      }
+
+      // Show confirmation dialog
+      Alert.alert(
+        'Leave Event',
+        'Are you sure you want to leave this event?',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel'
+          },
+          {
+            text: 'Leave',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                // Add to loading state
+                setJoiningEvents(prev => new Set([...prev, eventId]))
+                
+                console.log('🚺 Leaving event:', eventId)
+                const response = await eventsAPI.leaveEvent(eventId, userToken)
+                
+                console.log('✅ Leave response:', response)
+                
+                // Refresh events list to show updated attendee count
+                fetchEvents()
+                
+                Alert.alert('Success', 'You have left the event.', [
+                  {
+                    text: 'OK',
+                    onPress: () => {
+                      // Close modal after user acknowledges success
+                      if (showEventModal) {
+                        handleCloseModal()
+                      }
+                    }
+                  }
+                ])
+              } catch (error) {
+                console.error('❌ Leave event error:', error)
+                Alert.alert('Error', error.message || 'Failed to leave event')
+              } finally {
+                // Remove from loading state
+                setJoiningEvents(prev => {
+                  const newSet = new Set(prev)
+                  newSet.delete(eventId)
+                  return newSet
+                })
+              }
+            }
+          }
+        ]
+      )
+    } catch (error) {
+      console.error('❌ Leave event error:', error)
+      Alert.alert('Error', 'Failed to leave event')
+    }
+  }
+
+  const handleEventCardPress = (event) => {
+    setSelectedEvent(event)
+    setShowEventModal(true)
+  }
+
+  const handleCloseModal = () => {
+    setShowEventModal(false)
+    setTimeout(() => setSelectedEvent(null), 300) // Delay to allow animation
+  }
+
   const EventCard = ({ event }) => {
     const categoryInfo = CATEGORIES.find(cat => cat.id === event.category) || CATEGORIES[0]
     
     return (
-      <ClustrCard style={{
-        marginHorizontal: 20,
-        marginBottom: 16,
-        padding: 20,
-        borderRadius: 16,
-        backgroundColor: colors.surface,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
-      }}>
+      <Pressable onPress={() => handleEventCardPress(event)}>
+        <ClustrCard style={{
+          marginHorizontal: 20,
+          marginBottom: 16,
+          padding: 20,
+          borderRadius: 16,
+          backgroundColor: colors.surface,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 4,
+        }}>
         {/* Category Badge */}
                 {/* Multiple Tags Display */}
                 <View style={{
@@ -450,6 +542,7 @@ export const DashboardScreen = ({ onLogout, user }) => {
           })()}
         </View>
       </ClustrCard>
+      </Pressable>
     )
   }
 
@@ -699,6 +792,17 @@ export const DashboardScreen = ({ onLogout, user }) => {
           )}
         </ScrollView>
       </View>
+      
+      {/* Event Details Modal */}
+      <EventDetailsModal
+        visible={showEventModal}
+        onClose={handleCloseModal}
+        event={selectedEvent}
+        onJoinEvent={handleJoinEvent}
+        onLeaveEvent={handleLeaveEvent}
+        user={user}
+        isJoining={selectedEvent ? joiningEvents.has(selectedEvent.id) : false}
+      />
     </SafeAreaView>
   )
 }

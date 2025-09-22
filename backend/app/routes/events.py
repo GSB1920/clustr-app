@@ -194,3 +194,40 @@ def join_event(event_id):
         db.session.rollback()
         print(f"❌ Join event error: {str(e)}")
         return jsonify({'error': 'Failed to join event'}), 500
+
+@events_bp.route('/<event_id>/leave', methods=['POST'])
+@jwt_required()
+def leave_event(event_id):
+    """
+    Leave an event
+    """
+    try:
+        user_id = get_jwt_identity()
+        event = Event.query.get(event_id)
+        
+        if not event:
+            return jsonify({'error': 'Event not found'}), 404
+        
+        # Check if user is actually attending
+        if not event.attendees or user_id not in event.attendees:
+            return jsonify({
+                'error': 'You are not attending this event',
+                'event': event.to_dict()
+            }), 400
+        
+        # Remove user from attendees
+        event.attendees = [uid for uid in event.attendees if uid != user_id]
+        db.session.commit()
+        
+        print(f"✅ User {user_id} left event '{event.title}' (now {len(event.attendees)} attendees)")
+        
+        return jsonify({
+            'message': 'Successfully left event',
+            'event': event.to_dict(),
+            'user_left': True
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Leave event error: {str(e)}")
+        return jsonify({'error': 'Failed to leave event'}), 500

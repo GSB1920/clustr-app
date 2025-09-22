@@ -210,4 +210,14 @@ export const eventsAPI = {
       },
     })
   },
+
+  // Leave event
+  leaveEvent: async (eventId, token) => {
+    return await apiRequest(`/events/${eventId}/leave`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+  },
 }
