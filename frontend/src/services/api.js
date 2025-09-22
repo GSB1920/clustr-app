@@ -2,13 +2,20 @@ import { Platform } from 'react-native'
 
 // Production Railway API URL
 const RAILWAY_URL = 'https://renewed-wisdom-production.up.railway.app'
+const LOCAL_URL = 'http://localhost:5001'
 
 const getAPIBaseURL = () => {
-  if (__DEV__) {
-    // Use Railway production API for all platforms
+  // Always use production API by default
+  // To use local backend, set USE_LOCAL_BACKEND=true in .env.local
+  const useLocal = process.env.EXPO_PUBLIC_USE_LOCAL_BACKEND === 'true'
+  
+  if (useLocal) {
+    console.log('🔧 Using LOCAL backend:', LOCAL_URL)
+    return `${LOCAL_URL}/api`
+  } else {
+    console.log('🌐 Using PRODUCTION backend:', RAILWAY_URL)
     return `${RAILWAY_URL}/api`
   }
-  return `${RAILWAY_URL}/api`
 }
 
 const API_BASE_URL = getAPIBaseURL()

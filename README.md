@@ -87,6 +87,20 @@ npx expo start
 - **Scan the QR code** from terminal
 - **App loads instantly** - connects to live production backend!
 
+### **🔧 Switch to Local Backend (For Development)**
+```bash
+# Create .env.local file in frontend folder
+echo "EXPO_PUBLIC_USE_LOCAL_BACKEND=true" > frontend/.env.local
+
+# Make sure local backend is running
+cd backend
+python run.py
+
+# Then start frontend (will use local backend)
+cd frontend
+npx expo start
+```
+
 ### **🌐 Web Version (Alternative)**
 ```bash
 cd frontend

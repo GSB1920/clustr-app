@@ -40,8 +40,12 @@ const chatAPI = {
 
 // API configuration (matching main API service)
 const RAILWAY_URL = 'https://renewed-wisdom-production.up.railway.app'
-const API_BASE_URL = `${RAILWAY_URL}/api`
-const SOCKET_URL = RAILWAY_URL // For Socket.IO connection
+const LOCAL_URL = 'http://localhost:5001'
+
+// Use same logic as main API service
+const useLocal = process.env.EXPO_PUBLIC_USE_LOCAL_BACKEND === 'true'
+const API_BASE_URL = useLocal ? `${LOCAL_URL}/api` : `${RAILWAY_URL}/api`
+const SOCKET_URL = useLocal ? LOCAL_URL : RAILWAY_URL
 
 export const useChatStore = create((set, get) => ({
   // Chat state
