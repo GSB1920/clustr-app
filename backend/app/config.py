@@ -6,14 +6,8 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'your-secret-key-here-change-in-production'
     
-    # Database - Use PostgreSQL in production, SQLite locally
-    DATABASE_URL = os.environ.get('DATABASE_URL')
-    if DATABASE_URL:
-        # Production - Railway provides PostgreSQL
-        SQLALCHEMY_DATABASE_URI = DATABASE_URL.replace('postgres://', 'postgresql://')
-    else:
-        # Development - SQLite
-        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'clustr.db')
+    # Database - Use SQLite everywhere (simple and reliable)
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'clustr.db')
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
