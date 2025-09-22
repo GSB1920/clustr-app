@@ -8,8 +8,8 @@ import {
   Dimensions,
   Easing
 } from 'react-native'
-import { useClustrTheme } from '../theme/ClustrTheme'
-import { ClustrText, ClustrButton, ClustrCard } from './ui'
+import { useClustrTheme } from '../../theme/ClustrTheme'
+import { ClustrText, ClustrButton, ClustrCard } from '../ui'
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window')
 const MODAL_HEIGHT = SCREEN_HEIGHT * 0.75 // 75% of screen height
