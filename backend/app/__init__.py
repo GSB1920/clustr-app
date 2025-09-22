@@ -39,10 +39,14 @@ def create_app():
     app.register_blueprint(events_bp)
     app.register_blueprint(chat_bp)
     
-    # Register a basic health check route
+    # Register health check routes
     @app.route('/')
-    def health_check():
+    def home():
         return {'message': 'Clustr Backend is running!', 'status': 'healthy'}
+    
+    @app.route('/api/health')
+    def health_check():
+        return {'status': 'healthy', 'message': 'Clustr API is operational'}
     
     # Register Socket.IO events
     from app.routes.chat import register_socketio_events

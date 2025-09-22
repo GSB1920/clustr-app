@@ -6,9 +6,20 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'your-secret-key-here-change-in-production'
     
-    # Database - Force SQLite for now
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'clustr.db')
+    # Database - Use PostgreSQL in production, SQLite locally
+    DATABASE_URL = os.environ.get('DATABASE_URL')
+    if DATABASE_URL:
+        # Production - Railway provides PostgreSQL
+        SQLALCHEMY_DATABASE_URI = DATABASE_URL.replace('postgres://', 'postgresql://')
+    else:
+        # Development - SQLite
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'clustr.db')
+    
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Production settings
+    DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+    PORT = int(os.environ.get('PORT', 5001))
     
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'jwt-secret-key-change-in-production'
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=30)
