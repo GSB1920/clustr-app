@@ -29,6 +29,12 @@
     },
     "plugins": [
       "expo-web-browser"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "a6abeda6-2f85-4a03-9e7b-ab3e80bc9027"
+      }
+    },
+    "owner": "krethun"
   }
 }
