@@ -12,7 +12,7 @@
 
 - **Frontend:** React Native (Expo)
 - **Backend:** Python (FastAPI)
-- **Database:** PostgreSQL
+- **Database:** SQLLite
 - **Real-Time Communication:** Socket.IO
 
 ## 📋 Project Overview
