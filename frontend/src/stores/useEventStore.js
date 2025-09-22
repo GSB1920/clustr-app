@@ -11,6 +11,7 @@ export const useEventStore = create((set, get) => ({
   searchQuery: '',
   selectedEvent: null,
   showEventModal: false,
+  showChatModal: false,
   joiningEvents: new Set(),
 
   // 🎛️ SIMPLE SETTERS
@@ -35,6 +36,19 @@ export const useEventStore = create((set, get) => ({
   closeEventModal: () => set({ 
     selectedEvent: null, 
     showEventModal: false 
+  }),
+
+  openChatModal: (event) => {
+    console.log('💬 Opening chat modal for event:', event?.title)
+    set({ 
+      selectedEvent: event, 
+      showChatModal: true,
+      showEventModal: false // Close event modal when opening chat
+    })
+  },
+  
+  closeChatModal: () => set({ 
+    showChatModal: false 
   }),
 
   // 📡 ASYNC ACTIONS (replaces all handleXXX functions)

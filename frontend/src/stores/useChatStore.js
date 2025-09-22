@@ -63,14 +63,7 @@ export const useChatStore = create((set, get) => ({
   // Initialize Socket.IO connection
   initializeSocket: async () => {
     try {
-      const token = await AsyncStorage.getItem('userToken')
-      if (!token) {
-        console.log('❌ No token for socket connection')
-        return
-      }
-      
       const socket = io(SOCKET_URL, {
-        auth: { token },
         transports: ['websocket', 'polling']
       })
       
@@ -86,9 +79,17 @@ export const useChatStore = create((set, get) => ({
       
       socket.on('new_message', (messageData) => {
         console.log('💬 New message received:', messageData)
-        set(state => ({
-          messages: [...state.messages, messageData]
-        }))
+        
+        // Only add message if it's for the current event
+        const { currentEventId } = get()
+        if (messageData.event_id === currentEventId) {
+          console.log('✅ Message is for current event, adding to chat')
+          set(state => ({
+            messages: [...state.messages, messageData]
+          }))
+        } else {
+          console.log('❌ Message is for different event, ignoring')
+        }
       })
       
       socket.on('user_joined_chat', (data) => {
@@ -141,11 +142,8 @@ export const useChatStore = create((set, get) => ({
       // Load chat history first
       await get().loadChatHistory(eventId)
       
-      // Join Socket.IO room
-      if (socket && socket.connected) {
-        socket.emit('join_event_chat', { event_id: eventId })
-        console.log(`💬 Joined chat for event ${eventId}`)
-      }
+      // Ready to receive real-time messages
+      console.log(`💬 Ready to receive real-time messages for event ${eventId}`)
       
     } catch (error) {
       console.error('❌ Join chat error:', error)
@@ -157,12 +155,9 @@ export const useChatStore = create((set, get) => ({
   
   // Leave event chat
   leaveEventChat: () => {
-    const { socket, currentEventId } = get()
+    const { currentEventId } = get()
     
-    if (socket && currentEventId) {
-      socket.emit('leave_event_chat', { event_id: currentEventId })
-      console.log(`👋 Left chat for event ${currentEventId}`)
-    }
+    console.log(`👋 Left chat for event ${currentEventId}`)
     
     set({
       messages: [],
@@ -177,11 +172,16 @@ export const useChatStore = create((set, get) => ({
     try {
       const token = await AsyncStorage.getItem('userToken')
       if (!token) {
+        console.log('❌ No token for chat history')
         throw new Error('Authentication required')
       }
       
       console.log(`📜 Loading chat history for event ${eventId}`)
+      console.log(`🔗 API URL: ${API_BASE_URL}/chat/events/${eventId}/messages`)
+      
       const response = await chatAPI.getMessages(eventId, token)
+      
+      console.log('📡 Chat API response:', response)
       
       set({
         messages: response.messages || [],
@@ -192,6 +192,7 @@ export const useChatStore = create((set, get) => ({
       
     } catch (error) {
       console.error('❌ Load chat history error:', error)
+      console.error('❌ Error details:', error.message)
       set({ messages: [] })
     }
   },

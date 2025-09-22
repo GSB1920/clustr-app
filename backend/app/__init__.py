@@ -44,4 +44,8 @@ def create_app():
     def health_check():
         return {'message': 'Clustr Backend is running!', 'status': 'healthy'}
     
+    # Register Socket.IO events
+    from app.routes.chat import register_socketio_events
+    register_socketio_events(socketio)
+    
     return app

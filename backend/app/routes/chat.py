@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_socketio import emit, join_room, leave_room, rooms
-from app import db, socketio
+from app import db
 from app.models import User, Event, ChatRoom, Message
 import uuid
 
@@ -101,8 +101,13 @@ def send_message(event_id):
         
         print(f"💬 New message in {event.title}: {message.content[:50]}...")
         
-        # Emit to all users in the chat room via Socket.IO
-        socketio.emit('new_message', message_data, room=f"event_{event_id}")
+        # Emit to all connected clients (simplified approach)
+        from app import socketio
+        socketio.emit('new_message', {
+            **message_data,
+            'event_id': event_id  # Include event_id so frontend can filter
+        })
+        print(f"📡 Broadcasted message globally with event_id: {event_id}")
         
         return jsonify({
             'message': 'Message sent successfully',
@@ -114,80 +119,86 @@ def send_message(event_id):
         print(f"❌ Send message error: {str(e)}")
         return jsonify({'error': 'Failed to send message'}), 500
 
-# Socket.IO Events
-@socketio.on('join_event_chat')
-@jwt_required()
-def handle_join_chat(data):
-    """Join chat room for an event"""
-    try:
-        user_id = get_jwt_identity()
-        event_id = data.get('event_id')
-        
-        if not event_id:
-            emit('error', {'message': 'Event ID is required'})
-            return
-        
-        event = Event.query.get(event_id)
-        if not event:
-            emit('error', {'message': 'Event not found'})
-            return
-        
-        # Check if user is attending
-        if not event.attendees or user_id not in event.attendees:
-            emit('error', {'message': 'Access denied. You must be attending this event.'})
-            return
-        
-        # Join the Socket.IO room
-        room_name = f"event_{event_id}"
-        join_room(room_name)
-        
-        user = User.query.get(user_id)
-        print(f"👥 {user.username} joined chat for {event.title}")
-        
-        # Notify others that user joined
-        emit('user_joined_chat', {
-            'username': user.username,
-            'user_id': user_id,
-            'event_id': event_id
-        }, room=room_name, include_self=False)
-        
-        emit('joined_chat', {
-            'message': f'Joined chat for {event.title}',
-            'room': room_name
-        })
-        
-    except Exception as e:
-        print(f"❌ Join chat error: {str(e)}")
-        emit('error', {'message': 'Failed to join chat'})
+# Socket.IO Events moved to register_socketio_events function below
 
-@socketio.on('leave_event_chat')
-@jwt_required()
-def handle_leave_chat(data):
-    """Leave chat room for an event"""
-    try:
-        user_id = get_jwt_identity()
-        event_id = data.get('event_id')
-        
-        if event_id:
+# Socket.IO Events Registration Function
+def register_socketio_events(socketio):
+    """Register all Socket.IO events with the main app"""
+    
+    @socketio.on('join_event_chat')
+    def handle_join_chat(data):
+        """Join chat room for an event"""
+        try:
+            # For now, we'll skip JWT validation in Socket.IO and rely on HTTP API
+            event_id = data.get('event_id')
+            user_id = data.get('user_id')  # Pass from frontend
+            
+            if not event_id or not user_id:
+                emit('error', {'message': 'Event ID and User ID are required'})
+                return
+            
+            event = Event.query.get(event_id)
+            if not event:
+                emit('error', {'message': 'Event not found'})
+                return
+            
+            # Check if user is attending
+            if not event.attendees or user_id not in event.attendees:
+                emit('error', {'message': 'Access denied. You must be attending this event.'})
+                return
+            
+            # Join the Socket.IO room
             room_name = f"event_{event_id}"
-            leave_room(room_name)
+            join_room(room_name)
             
             user = User.query.get(user_id)
-            event = Event.query.get(event_id)
+            print(f"👥 {user.username if user else 'Unknown'} joined chat for {event.title}")
             
-            print(f"👋 {user.username} left chat for {event.title}")
-            
-            # Notify others that user left
-            emit('user_left_chat', {
-                'username': user.username,
+            # Notify others that user joined
+            emit('user_joined_chat', {
+                'username': user.username if user else 'Unknown',
                 'user_id': user_id,
                 'event_id': event_id
-            }, room=room_name)
-        
-    except Exception as e:
-        print(f"❌ Leave chat error: {str(e)}")
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    """Handle user disconnect"""
-    print(f"🔌 User disconnected from chat")
+            }, room=room_name, include_self=False)
+            
+            emit('joined_chat', {
+                'message': f'Joined chat for {event.title}',
+                'room': room_name
+            })
+            
+        except Exception as e:
+            print(f"❌ Join chat error: {str(e)}")
+            emit('error', {'message': 'Failed to join chat'})
+    
+    @socketio.on('leave_event_chat')
+    def handle_leave_chat(data):
+        """Leave chat room for an event"""
+        try:
+            event_id = data.get('event_id')
+            user_id = data.get('user_id')
+            
+            if event_id:
+                room_name = f"event_{event_id}"
+                leave_room(room_name)
+                
+                user = User.query.get(user_id)
+                event = Event.query.get(event_id)
+                
+                print(f"👋 {user.username if user else 'Unknown'} left chat for {event.title if event else 'Unknown Event'}")
+                
+                # Notify others that user left
+                emit('user_left_chat', {
+                    'username': user.username if user else 'Unknown',
+                    'user_id': user_id,
+                    'event_id': event_id
+                }, room=room_name)
+            
+        except Exception as e:
+            print(f"❌ Leave chat error: {str(e)}")
+    
+    @socketio.on('disconnect')
+    def handle_disconnect():
+        """Handle user disconnect"""
+        print(f"🔌 User disconnected from chat")
+    
+    print("✅ Socket.IO events registered successfully")

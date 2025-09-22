@@ -20,6 +20,7 @@ export const EventDetailsModal = ({
   event, 
   onJoinEvent,
   onLeaveEvent,
+  onOpenChat,
   user,
   isJoining = false 
 }) => {
@@ -408,7 +409,7 @@ export const EventDetailsModal = ({
           </View>
         </ScrollView>
 
-        {/* Fixed Bottom Action */}
+        {/* Fixed Bottom Actions */}
         <View style={{
           position: 'absolute',
           bottom: 0,
@@ -419,6 +420,41 @@ export const EventDetailsModal = ({
           borderTopWidth: 1,
           borderTopColor: colors.border || colors.textSecondary + '20'
         }}>
+          {/* Chat Button (only for joined events) */}
+          {hasUserJoined && (
+            <ClustrButton
+              style={{
+                backgroundColor: colors.background,
+                paddingVertical: 12,
+                borderRadius: 12,
+                marginBottom: 12,
+                borderWidth: 1,
+                borderColor: colors.primary
+              }}
+              onPress={() => onOpenChat && onOpenChat(event)}
+            >
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <ClustrText style={{
+                  fontSize: 16,
+                  marginRight: 8
+                }}>
+                  💬
+                </ClustrText>
+                <ClustrText style={{
+                  fontSize: 16,
+                  fontWeight: '600',
+                  color: colors.primary,
+                  textAlign: 'center'
+                }}>
+                  Open Event Chat
+                </ClustrText>
+              </View>
+            </ClustrButton>
+          )}
           <ClustrButton
             disabled={buttonConfig.disabled}
             style={{
