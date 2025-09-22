@@ -80,13 +80,19 @@ export const useChatStore = create((set, get) => ({
       socket.on('new_message', (messageData) => {
         console.log('💬 New message received:', messageData)
         
-        // Only add message if it's for the current event
-        const { currentEventId } = get()
+        // Only add message if it's for the current event and not duplicate
+        const { currentEventId, messages } = get()
         if (messageData.event_id === currentEventId) {
-          console.log('✅ Message is for current event, adding to chat')
-          set(state => ({
-            messages: [...state.messages, messageData]
-          }))
+          // Check if message already exists (prevent duplicates)
+          const messageExists = messages.some(msg => msg.id === messageData.id)
+          if (!messageExists) {
+            console.log('✅ New message for current event, adding to chat')
+            set(state => ({
+              messages: [...state.messages, messageData]
+            }))
+          } else {
+            console.log('⚠️ Message already exists, skipping duplicate')
+          }
         } else {
           console.log('❌ Message is for different event, ignoring')
         }
@@ -94,13 +100,14 @@ export const useChatStore = create((set, get) => ({
       
       socket.on('user_joined_chat', (data) => {
         console.log('👥 User joined chat:', data.username)
-        // Add system message
+        // Add system message with unique ID
         const systemMessage = {
-          id: `system_${Date.now()}`,
+          id: `system_join_${data.user_id}_${Date.now()}`,
           content: `${data.username} joined the chat`,
           message_type: 'system',
           created_at: new Date().toISOString(),
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          event_id: data.event_id
         }
         set(state => ({
           messages: [...state.messages, systemMessage]
@@ -109,13 +116,14 @@ export const useChatStore = create((set, get) => ({
       
       socket.on('user_left_chat', (data) => {
         console.log('👋 User left chat:', data.username)
-        // Add system message
+        // Add system message with unique ID
         const systemMessage = {
-          id: `system_${Date.now()}`,
+          id: `system_leave_${data.user_id}_${Date.now()}`,
           content: `${data.username} left the chat`,
           message_type: 'system',
           created_at: new Date().toISOString(),
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          event_id: data.event_id
         }
         set(state => ({
           messages: [...state.messages, systemMessage]

@@ -228,7 +228,7 @@ export const ChatScreen = ({ event, user, onClose }) => {
           ref={flatListRef}
           data={messages}
           renderItem={renderMessage}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => item.id || `message_${index}_${item.timestamp || Date.now()}`}
           style={{ flex: 1 }}
           contentContainerStyle={{ 
             paddingVertical: 16,
