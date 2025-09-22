@@ -158,6 +158,19 @@ export const authAPI = {
       }),
     })
   },
+
+  // Get user interests
+  getUserInterests: async (token) => {
+    console.log('📋 Getting user interests')
+    console.log('🔑 Using token:', token ? 'exists' : 'missing')
+    
+    return await apiRequest('/auth/interests', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    })
+  },
 }
 
 // Update healthCheck function

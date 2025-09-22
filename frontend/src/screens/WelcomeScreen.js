@@ -8,6 +8,7 @@ import {
 } from 'react-native'
 import { useClustrTheme } from '../theme/ClustrTheme'
 import { ClustrText, ClustrButton } from '../components/ui'
+import { ClustrLogoLarge } from '../assets/ClustrLogo'
 
 const { width, height } = Dimensions.get('window')
 
@@ -85,76 +86,8 @@ export const WelcomeScreen = ({ onGetStarted }) => {
               marginBottom: 32,
             }}
           >
-            {/* Multi-layered Logo Design */}
-            <View style={{
-              position: 'relative',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              {/* Outer Glow Ring */}
-              <View style={{
-                position: 'absolute',
-                width: 140,
-                height: 140,
-                borderRadius: 70,
-                backgroundColor: colors.primary + '20',
-                shadowColor: colors.primary,
-                shadowOffset: { width: 0, height: 0 },
-                shadowOpacity: 0.3,
-                shadowRadius: 20,
-                elevation: 10,
-              }} />
-              
-              {/* Middle Ring */}
-              <View style={{
-                position: 'absolute',
-                width: 120,
-                height: 120,
-                borderRadius: 60,
-                backgroundColor: colors.primary + '40',
-                shadowColor: colors.primary,
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.4,
-                shadowRadius: 16,
-                elevation: 8,
-              }} />
-              
-              {/* Main Logo Container */}
-              <View style={{
-                width: 100,
-                height: 100,
-                borderRadius: 24,
-                backgroundColor: colors.primary,
-                justifyContent: 'center',
-                alignItems: 'center',
-                shadowColor: colors.primary,
-                shadowOffset: { width: 0, height: 12 },
-                shadowOpacity: 0.5,
-                shadowRadius: 20,
-                elevation: 12,
-                borderWidth: 3,
-                borderColor: colors.surface,
-              }}>
-                {/* Cluster Icon */}
-                <View style={{ position: 'relative' }}>
-                  <ClustrText style={{ fontSize: 32, color: 'white' }}>⚡</ClustrText>
-                  {/* Sparkle Effects */}
-                  <View style={{
-                    position: 'absolute',
-                    top: -8,
-                    right: -8,
-                    width: 16,
-                    height: 16,
-                    borderRadius: 8,
-                    backgroundColor: colors.accent,
-                    shadowColor: colors.accent,
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.6,
-                    shadowRadius: 4,
-                  }} />
-                </View>
-              </View>
-            </View>
+            {/* Clustr Logo */}
+            <ClustrLogoLarge />
           </Animated.View>
           
           {/* Brand Name & Tagline */}

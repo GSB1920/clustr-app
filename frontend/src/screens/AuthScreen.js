@@ -15,6 +15,7 @@ import { ClustrText, ClustrButton, ClustrInput, ClustrCard } from '../components
 import { authAPI } from '../services/api'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { GoogleIcon } from '../components/GoogleIcon'
+import { ClustrLogoMedium } from '../assets/ClustrLogo'
 import * as AuthSession from 'expo-auth-session'
 import * as WebBrowser from 'expo-web-browser'
 
@@ -216,6 +217,11 @@ export const AuthScreen = ({ onAuthSuccess, onGoBack }) => {
             
             {/* Header */}
             <View style={{ alignItems: 'center', marginBottom: 40, paddingHorizontal: 24 }}>
+              {/* Logo */}
+              <View style={{ marginBottom: 20 }}>
+                <ClustrLogoMedium />
+              </View>
+              
               <ClustrText variant="title" style={{ fontSize: 32, fontWeight: '700', marginBottom: 8 }}>
                 {isSignUp ? 'Create Account' : 'Welcome Back'}
               </ClustrText>

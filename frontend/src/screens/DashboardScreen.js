@@ -17,6 +17,7 @@ import { ClustrText, ClustrButton, ClustrCard } from '../components/ui'
 import { EventDetailsModal } from '../components/modals/EventDetailsModal'
 import { EventCard } from '../components/cards/EventCard'
 import { ChatScreen } from './ChatScreen'
+import { ClustrHeaderLogo } from '../assets/ClustrLogo'
 import { useEventStore } from '../stores/useEventStore'
 import { CATEGORIES } from '../constants/categories'
 
@@ -229,20 +230,9 @@ export const DashboardScreen = ({ onLogout, user }) => {
                 alignItems: 'center'
               }}>
                 <View style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 20,
-                  backgroundColor: colors.primary,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginRight: 12
+                  marginRight: 16
                 }}>
-                  <ClustrText style={{ 
-                    fontSize: 18,
-                    color: colors.surface 
-                  }}>
-                    C
-                  </ClustrText>
+                  <ClustrHeaderLogo />
                 </View>
                 <View>
                   <ClustrText style={{
@@ -256,7 +246,7 @@ export const DashboardScreen = ({ onLogout, user }) => {
                     fontSize: 12,
                     color: colors.textSecondary
                   }}>
-                    San Francisco, CA
+                    Ujjain, MP
                   </ClustrText>
                 </View>
               </View>

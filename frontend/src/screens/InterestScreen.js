@@ -12,6 +12,7 @@ import { useClustrTheme } from '../theme/ClustrTheme'
 import { ClustrText, ClustrButton, ClustrCard } from '../components/ui'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { authAPI } from '../services/api'
+import { ClustrLogoMedium } from '../assets/ClustrLogo'
 
 // Interest categories with icons and colors
 const INTERESTS = [
@@ -209,6 +210,11 @@ export const InterestScreen = ({ onInterestsSelected, user }) => {
             paddingHorizontal: 24,
             paddingBottom: 30
           }}>
+            {/* Logo */}
+            <View style={{ alignItems: 'center', marginBottom: 20 }}>
+              <ClustrLogoMedium />
+            </View>
+            
             <ClustrText style={{
               fontSize: 28,
               fontWeight: '700',

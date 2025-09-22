@@ -61,27 +61,50 @@ const AppContent = () => {
 
   const checkAppState = async () => {
     try {
-      // TEMPORARY: Clear storage to always start from welcome (for development)
-      await AsyncStorage.clear()  // Uncomment this line to always start from welcome
+      // TEMPORARY: Clear storage for demo purposes (remove this line for production)
+      await AsyncStorage.clear()
       
+      // Check app state without clearing storage (production behavior)
       const hasSeenWelcome = await AsyncStorage.getItem('hasSeenWelcome')
       const userToken = await AsyncStorage.getItem('userToken')
       const userData = await AsyncStorage.getItem('userData')
-      const hasSelectedInterests = await AsyncStorage.getItem('hasSelectedInterests')
       
       console.log('🔍 Debug - hasSeenWelcome:', hasSeenWelcome)
       console.log('🔍 Debug - userToken:', userToken ? 'exists' : 'none')
-      console.log('🔍 Debug - hasSelectedInterests:', hasSelectedInterests)
       
       if (userToken && userData) {
         const user = JSON.parse(userData)
         setUser(user)
         
-        // Check if user has selected interests
-        if (hasSelectedInterests === 'true') {
-          setCurrentScreen('main')
-        } else {
-          setCurrentScreen('interests')
+        // Check if user has interests via API call
+        try {
+          const { authAPI } = await import('./src/services/api')
+          const response = await authAPI.getUserInterests(userToken)
+          
+          if (response && response.interests && response.interests.length > 0) {
+            console.log('✅ User has interests from API:', response.interests)
+            // Save interests locally for offline access
+            await AsyncStorage.setItem('userInterests', JSON.stringify(response.interests))
+            await AsyncStorage.setItem('hasSelectedInterests', 'true')
+            setCurrentScreen('main')
+          } else {
+            console.log('🎯 User needs to select interests (API check)')
+            setCurrentScreen('interests')
+          }
+        } catch (apiError) {
+          console.log('⚠️ API check failed, falling back to local storage:', apiError.message)
+          
+          // Fallback to local storage check
+          const hasSelectedInterests = await AsyncStorage.getItem('hasSelectedInterests')
+          const userInterests = await AsyncStorage.getItem('userInterests')
+          
+          if (hasSelectedInterests === 'true' && userInterests) {
+            console.log('✅ User has interests from local storage')
+            setCurrentScreen('main')
+          } else {
+            console.log('🎯 User needs to select interests (local fallback)')
+            setCurrentScreen('interests')
+          }
         }
       } else if (hasSeenWelcome === 'true') {
         setCurrentScreen('auth')

@@ -5,10 +5,10 @@ import { useClustrTheme } from '../theme/ClustrTheme'
 // SINGLE SOURCE OF TRUTH FOR CLUSTR LOGO
 const LOGO_CONFIG = {
   // Set this to true when you have the actual logo file
-  useActualLogo: false,
+  useActualLogo: true,
   
   // Path to your actual logo (only used when useActualLogo is true)
-  // logoPath: require('../../assets/clustr-logo.png'), // Uncomment and update this when you have the logo
+  logoPath: require('../../assets/clustr-logo.png'), // Update this path to match your logo file
   
   // Placeholder configuration
   placeholder: {
@@ -151,7 +151,7 @@ export const ClustrLogoLarge = (props) => (
 
 // Header logo (for navigation bars)
 export const ClustrHeaderLogo = (props) => (
-  <ClustrLogo size={32} variant="icon-only" {...props} />
+  <ClustrLogo size={70} variant="icon-only" {...props} />
 )
 
 // Helper function to enable actual logo when you have the file
