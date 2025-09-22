@@ -46,6 +46,12 @@ const apiRequest = async (endpoint, options = {}) => {
     }
     
     const data = await response.json()
+    console.log('✅ API Success:', data)
+if (data.event && data.event.tags) {
+  console.log('🏷️ Event tags in response:', data.event.tags)
+  console.log('🏷️ Event tags type:', typeof data.event.tags)
+  console.log('🏷️ Event tags length:', data.event.tags?.length)
+}
 
     if (!response.ok) {
       console.error('❌ API Error:', data)

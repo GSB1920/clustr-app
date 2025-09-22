@@ -198,34 +198,74 @@ export const DashboardScreen = ({ onLogout, user }) => {
         elevation: 4,
       }}>
         {/* Category Badge */}
-        <View style={{
+                {/* Multiple Tags Display */}
+                <View style={{
           flexDirection: 'row',
           justifyContent: 'space-between',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           marginBottom: 12
         }}>
           <View style={{
-            backgroundColor: categoryInfo.color + '20',
-            paddingHorizontal: 12,
-            paddingVertical: 6,
-            borderRadius: 20,
             flexDirection: 'row',
-            alignItems: 'center'
+            flexWrap: 'wrap',
+            flex: 1,
+            marginRight: 8
           }}>
-            <ClustrText style={{ 
-              fontSize: 12, 
-              marginRight: 4 
-            }}>
-              {categoryInfo.icon}
-            </ClustrText>
-            <ClustrText style={{ 
-              fontSize: 12, 
-              fontWeight: '600',
-              color: categoryInfo.color 
-            }}>
-              {event.category}
-            </ClustrText>
+            {/* Render multiple tags */}
+            {(event.tags && event.tags.length > 0 ? event.tags : [event.category]).slice(0, 3).map((tag, index) => {
+              const tagInfo = CATEGORIES.find(cat => cat.id === tag) || CATEGORIES[0]
+              return (
+                <View
+                  key={index}
+                  style={{
+                    backgroundColor: tagInfo.color + '20',
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    borderRadius: 12,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginRight: 6,
+                    marginBottom: 4
+                  }}
+                >
+                  <ClustrText style={{ 
+                    fontSize: 10, 
+                    marginRight: 2 
+                  }}>
+                    {tagInfo.icon}
+                  </ClustrText>
+                  <ClustrText style={{ 
+                    fontSize: 10, 
+                    fontWeight: '600',
+                    color: tagInfo.color 
+                  }}>
+                    {tag}
+                  </ClustrText>
+                </View>
+              )
+            })}
+            
+            {/* Show "+X more" if there are more than 3 tags */}
+            {(event.tags && event.tags.length > 3) && (
+              <View style={{
+                backgroundColor: colors.textSecondary + '20',
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                borderRadius: 12,
+                justifyContent: 'center',
+                marginBottom: 4
+              }}>
+                <ClustrText style={{ 
+                  fontSize: 10, 
+                  fontWeight: '600',
+                  color: colors.textSecondary 
+                }}>
+                  +{event.tags.length - 3}
+                </ClustrText>
+              </View>
+            )}
           </View>
+          
           <ClustrText style={{ 
             fontSize: 12, 
             color: colors.textSecondary,

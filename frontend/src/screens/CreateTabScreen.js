@@ -199,6 +199,10 @@ export const CreateTabScreen = ({ user }) => {
 
       console.log('🎉 Creating event with payload:', eventPayload)
       console.log('🔑 Using user token:', userToken ? 'exists' : 'missing')
+      console.log('🏷️ Payload categories:', eventPayload.categories)
+      console.log('🏷️ Payload categories type:', typeof eventPayload.categories)
+      console.log('🏷️ Payload categories length:', eventPayload.categories?.length)
+      console.log('🔑 Using user token:', userToken ? 'exists' : 'missing')
       
       // Actually call the backend API!
       const response = await eventsAPI.createEvent(eventPayload, userToken)

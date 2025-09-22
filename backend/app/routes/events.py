@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
 from app.models import User, Event
-from datetime import datetime
+from datetime import datetime, timedelta
 import uuid
 
 events_bp = Blueprint('events', __name__, url_prefix='/api/events')
@@ -33,6 +33,9 @@ def create_event():
             return jsonify({'error': 'No data provided'}), 400
         
         print(f"📝 Creating event with data: {data}")
+        print(f"🏷️ Categories received: {data.get('categories', [])}")
+        print(f"🏷️ Categories type: {type(data.get('categories', []))}")
+        print(f"🏷️ Categories length: {len(data.get('categories', []))}")
         
         # Validate required fields
         required_fields = ['title', 'description', 'categories', 'streetAddress', 'city', 'state', 'capacity']
@@ -42,9 +45,9 @@ def create_event():
         
         # Validate categories
         categories = data.get('categories', [])
+        print(f"🔍 Categories after extraction: {categories}")
         if not categories or len(categories) == 0:
             return jsonify({'error': 'At least one category is required'}), 400
-        
         # Validate capacity
         try:
             capacity = int(data.get('capacity'))
@@ -59,14 +62,16 @@ def create_event():
             full_address += f" ({data.get('landmark')})"
         
         # For now, use current time + 1 hour as default event time
-        # TODO: Parse actual date/time from frontend
-        event_date = datetime.utcnow().replace(hour=datetime.utcnow().hour + 1, minute=0, second=0, microsecond=0)
+        event_date = (datetime.utcnow() + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
         
         # Get user
         user = User.query.get(user_id)
         if not user:
             return jsonify({'error': 'User not found'}), 404
-        
+        print(f"🎯 About to create event with:")
+        print(f"  - category: {categories[0]}")
+        print(f"  - tags: {categories}")
+        print(f"  - tags type: {type(categories)}")
         # Create new event
         event = Event(
             id=str(uuid.uuid4()),
