@@ -34,8 +34,10 @@ def create_app():
     # Register blueprints
     from app.routes.auth import auth_bp
     from app.routes.events import events_bp
+    from app.routes.chat import chat_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(events_bp)
+    app.register_blueprint(chat_bp)
     
     # Register a basic health check route
     @app.route('/')
