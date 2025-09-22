@@ -135,3 +135,46 @@ class Event(db.Model):
             'created_by': self.created_by,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
+
+class ChatRoom(db.Model):
+    __tablename__ = 'chat_rooms'
+    
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    event_id = db.Column(db.String(36), db.ForeignKey('events.id'), nullable=False, unique=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship to event
+    event = db.relationship('Event', backref='chat_room')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'event_id': self.event_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
+class Message(db.Model):
+    __tablename__ = 'messages'
+    
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    chat_room_id = db.Column(db.String(36), db.ForeignKey('chat_rooms.id'), nullable=False)
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    message_type = db.Column(db.String(20), default='text')  # text, system, image
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    chat_room = db.relationship('ChatRoom', backref='messages')
+    user = db.relationship('User', backref='messages')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'chat_room_id': self.chat_room_id,
+            'user_id': self.user_id,
+            'username': self.user.username if self.user else 'Unknown',
+            'content': self.content,
+            'message_type': self.message_type,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'timestamp': int(self.created_at.timestamp() * 1000) if self.created_at else None
+        }
