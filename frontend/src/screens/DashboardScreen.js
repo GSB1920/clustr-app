@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useRef, useEffect } from 'react'
 import { 
   View, 
   ScrollView, 
@@ -13,9 +13,10 @@ import {
 } from 'react-native'
 import { useClustrTheme } from '../theme/ClustrTheme'
 import { ClustrText, ClustrButton, ClustrCard } from '../components/ui'
-import { EventDetailsModal } from '../components/EventDetailsModal'
-import { eventsAPI } from '../services/api'
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import { EventDetailsModal } from '../components/modals/EventDetailsModal'
+import { EventCard } from '../components/cards/EventCard'
+import { useEventStore } from '../stores/useEventStore'
+import { CATEGORIES } from '../constants/categories'
 
 const { width, height } = Dimensions.get('window')
 
@@ -95,23 +96,30 @@ const MOCK_EVENTS = [
   }
 ]
 
-const CATEGORIES = [
-  { id: 'all', name: 'All', icon: '📋', color: '#6C7B7F' },
-  { id: 'social', name: 'Social', icon: '🤝', color: '#45B7D1' },
-  { id: 'sports', name: 'Sports', icon: '🏀', color: '#4ECDC4' },
-  { id: 'food', name: 'Food', icon: '🍎', color: '#FF6B6B' },
-  { id: 'music', name: 'Music', icon: '🎵', color: '#9B59B6' }
-]
+// CATEGORIES moved to constants/categories.js
 
 export const DashboardScreen = ({ onLogout, user }) => {
   const { colors } = useClustrTheme()
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [events, setEvents] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [joiningEvents, setJoiningEvents] = useState(new Set()) // Track loading states
-  const [selectedEvent, setSelectedEvent] = useState(null) // For modal
-  const [showEventModal, setShowEventModal] = useState(false)
+  
+  // 🎯 REPLACE ALL useState WITH ONE HOOK!
+  const {
+    events,
+    isLoading,
+    selectedCategory,
+    searchQuery,
+    selectedEvent,
+    showEventModal,
+    joiningEvents,
+    setSelectedCategory,
+    setSearchQuery,
+    fetchEvents,
+    joinEvent,
+    leaveEvent,
+    openEventModal,
+    closeEventModal
+  } = useEventStore()
+  
+  // Keep only animations (these stay local)
   const fadeAnim = useRef(new Animated.Value(0)).current
   const slideAnim = useRef(new Animated.Value(50)).current
 
@@ -138,413 +146,14 @@ export const DashboardScreen = ({ onLogout, user }) => {
     console.log('👤 User ID:', user?.id)
   }, [user])
 
-  const fetchEvents = async () => {
-    try {
-      setIsLoading(true)
-      console.log('📋 Fetching events from backend...')
-      
-      const response = await eventsAPI.getEvents({
-        category: selectedCategory !== 'all' ? selectedCategory : undefined,
-        search: searchQuery || undefined
-      })
-      
-      console.log('✅ Events fetched:', response.events.length)
-      setEvents(response.events || [])
-      
-    } catch (error) {
-      console.error('❌ Error fetching events:', error)
-      setEvents([]) // Show empty list on error
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  // Events are already filtered by backend through Zustand
+  const filteredEvents = events
 
-  // Refetch when category or search changes
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      fetchEvents()
-    }, 300) // Debounce search
-    
-    return () => clearTimeout(timeoutId)
-  }, [selectedCategory, searchQuery])
+  // handleJoinEvent moved to Zustand store
 
-  const filteredEvents = events // Events are already filtered by backend
+  // All handlers moved to Zustand store
 
-  const handleJoinEvent = async (eventId) => {
-    // Prevent multiple clicks
-    if (joiningEvents.has(eventId)) return
-    
-    try {
-      const userToken = await AsyncStorage.getItem('userToken')
-      if (!userToken) {
-        Alert.alert('Authentication Required', 'Please log in to join events')
-        return
-      }
-
-      // Add to loading state
-      setJoiningEvents(prev => new Set([...prev, eventId]))
-      
-      console.log('🤝 Joining event:', eventId)
-      const response = await eventsAPI.joinEvent(eventId, userToken)
-      
-      console.log('✅ Join response:', response)
-      
-      // Refresh events list to show updated attendee count
-      fetchEvents()
-      
-      Alert.alert('Success', 'You have joined the event!', [
-        {
-          text: 'OK',
-          onPress: () => {
-            // Close modal after user acknowledges success
-            if (showEventModal) {
-              handleCloseModal()
-            }
-          }
-        }
-      ])
-    } catch (error) {
-      console.error('❌ Join event error:', error)
-      Alert.alert('Error', error.message || 'Failed to join event')
-    } finally {
-      // Remove from loading state
-      setJoiningEvents(prev => {
-        const newSet = new Set(prev)
-        newSet.delete(eventId)
-        return newSet
-      })
-    }
-  }
-
-  const handleLeaveEvent = async (eventId) => {
-    // Prevent multiple clicks
-    if (joiningEvents.has(eventId)) return
-    
-    try {
-      const userToken = await AsyncStorage.getItem('userToken')
-      if (!userToken) {
-        Alert.alert('Authentication Required', 'Please log in to manage events')
-        return
-      }
-
-      // Show confirmation dialog
-      Alert.alert(
-        'Leave Event',
-        'Are you sure you want to leave this event?',
-        [
-          {
-            text: 'Cancel',
-            style: 'cancel'
-          },
-          {
-            text: 'Leave',
-            style: 'destructive',
-            onPress: async () => {
-              try {
-                // Add to loading state
-                setJoiningEvents(prev => new Set([...prev, eventId]))
-                
-                console.log('🚺 Leaving event:', eventId)
-                const response = await eventsAPI.leaveEvent(eventId, userToken)
-                
-                console.log('✅ Leave response:', response)
-                
-                // Refresh events list to show updated attendee count
-                fetchEvents()
-                
-                Alert.alert('Success', 'You have left the event.', [
-                  {
-                    text: 'OK',
-                    onPress: () => {
-                      // Close modal after user acknowledges success
-                      if (showEventModal) {
-                        handleCloseModal()
-                      }
-                    }
-                  }
-                ])
-              } catch (error) {
-                console.error('❌ Leave event error:', error)
-                Alert.alert('Error', error.message || 'Failed to leave event')
-              } finally {
-                // Remove from loading state
-                setJoiningEvents(prev => {
-                  const newSet = new Set(prev)
-                  newSet.delete(eventId)
-                  return newSet
-                })
-              }
-            }
-          }
-        ]
-      )
-    } catch (error) {
-      console.error('❌ Leave event error:', error)
-      Alert.alert('Error', 'Failed to leave event')
-    }
-  }
-
-  const handleEventCardPress = (event) => {
-    setSelectedEvent(event)
-    setShowEventModal(true)
-  }
-
-  const handleCloseModal = () => {
-    setShowEventModal(false)
-    setTimeout(() => setSelectedEvent(null), 300) // Delay to allow animation
-  }
-
-  const EventCard = ({ event }) => {
-    const categoryInfo = CATEGORIES.find(cat => cat.id === event.category) || CATEGORIES[0]
-    
-    return (
-      <Pressable onPress={() => handleEventCardPress(event)}>
-        <ClustrCard style={{
-          marginHorizontal: 20,
-          marginBottom: 16,
-          padding: 20,
-          borderRadius: 16,
-          backgroundColor: colors.surface,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          elevation: 4,
-        }}>
-        {/* Category Badge */}
-                {/* Multiple Tags Display */}
-                <View style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          marginBottom: 12
-        }}>
-          <View style={{
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            flex: 1,
-            marginRight: 8
-          }}>
-            {/* Render multiple tags */}
-            {(event.tags && event.tags.length > 0 ? event.tags : [event.category]).slice(0, 3).map((tag, index) => {
-              const tagInfo = CATEGORIES.find(cat => cat.id === tag) || CATEGORIES[0]
-              return (
-                <View
-                  key={index}
-                  style={{
-                    backgroundColor: tagInfo.color + '20',
-                    paddingHorizontal: 8,
-                    paddingVertical: 4,
-                    borderRadius: 12,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    marginRight: 6,
-                    marginBottom: 4
-                  }}
-                >
-                  <ClustrText style={{ 
-                    fontSize: 10, 
-                    marginRight: 2 
-                  }}>
-                    {tagInfo.icon}
-                  </ClustrText>
-                  <ClustrText style={{ 
-                    fontSize: 10, 
-                    fontWeight: '600',
-                    color: tagInfo.color 
-                  }}>
-                    {tag}
-                  </ClustrText>
-                </View>
-              )
-            })}
-            
-            {/* Show "+X more" if there are more than 3 tags */}
-            {(event.tags && event.tags.length > 3) && (
-              <View style={{
-                backgroundColor: colors.textSecondary + '20',
-                paddingHorizontal: 8,
-                paddingVertical: 4,
-                borderRadius: 12,
-                justifyContent: 'center',
-                marginBottom: 4
-              }}>
-                <ClustrText style={{ 
-                  fontSize: 10, 
-                  fontWeight: '600',
-                  color: colors.textSecondary 
-                }}>
-                  +{event.tags.length - 3}
-                </ClustrText>
-              </View>
-            )}
-          </View>
-          
-          <ClustrText style={{ 
-            fontSize: 12, 
-            color: colors.textSecondary,
-            fontWeight: '500'
-          }}>
-            {new Date(event.event_date).toLocaleDateString('en-US', {
-              weekday: 'short',
-              month: 'short',
-              day: 'numeric'
-            })}
-          </ClustrText>
-        </View>
-
-        {/* Event Title */}
-        <ClustrText style={{
-          fontSize: 18,
-          fontWeight: '700',
-          color: colors.text,
-          marginBottom: 8
-        }}>
-          {event.title}
-        </ClustrText>
-
-        {/* Description */}
-        <ClustrText style={{
-          fontSize: 14,
-          color: colors.textSecondary,
-          lineHeight: 20,
-          marginBottom: 16
-        }}>
-          {event.description}
-        </ClustrText>
-
-        {/* Location and Time */}
-        <View style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          marginBottom: 16
-        }}>
-          <View style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            flex: 1
-          }}>
-            <ClustrText style={{ fontSize: 14, marginRight: 4 }}>📍</ClustrText>
-            <ClustrText style={{
-              fontSize: 14,
-              color: colors.textSecondary,
-              flex: 1
-            }}>
-              {event.location}
-            </ClustrText>
-          </View>
-          <View style={{
-            flexDirection: 'row',
-            alignItems: 'center'
-          }}>
-            <ClustrText style={{ fontSize: 14, marginRight: 4 }}>🕐</ClustrText>
-            <ClustrText style={{
-              fontSize: 14,
-              color: colors.textSecondary
-            }}>
-              {new Date(event.event_date).toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-              })}
-            </ClustrText>
-          </View>
-        </View>
-
-        {/* Attendees and Join Button */}
-        <View style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <View style={{
-            flexDirection: 'row',
-            alignItems: 'center'
-          }}>
-            <View>
-              <ClustrText style={{
-                fontSize: 12,
-                fontWeight: '600',
-                color: colors.text
-              }}>
-                {event.attendee_count || 0} attending
-              </ClustrText>
-              <ClustrText style={{
-                fontSize: 11,
-                color: colors.textSecondary
-              }}>
-                {event.spots_left || event.max_attendees} spots left
-              </ClustrText>
-            </View>
-          </View>
-
-          {/* Smart Join Button */}
-          {(() => {
-            const isJoining = joiningEvents.has(event.id)
-            const currentUserId = user?.id
-            const hasUserJoined = event.attendees && event.attendees.includes(currentUserId)
-            const isEventFull = (event.attendee_count || 0) >= event.max_attendees
-            
-            // Determine button state
-            let buttonConfig = {
-              text: 'Join',
-              backgroundColor: colors.primary,
-              textColor: colors.surface,
-              disabled: false
-            }
-            
-            if (isJoining) {
-              buttonConfig = {
-                text: 'Joining...',
-                backgroundColor: colors.primary + '80',
-                textColor: colors.surface,
-                disabled: true
-              }
-            } else if (hasUserJoined) {
-              buttonConfig = {
-                text: 'Joined ✓',
-                backgroundColor: '#10B981',
-                textColor: colors.surface,
-                disabled: true
-              }
-            } else if (isEventFull) {
-              buttonConfig = {
-                text: 'Full',
-                backgroundColor: colors.textSecondary + '40',
-                textColor: colors.textSecondary,
-                disabled: true
-              }
-            }
-            
-            return (
-              <ClustrButton
-                variant="primary"
-                disabled={buttonConfig.disabled}
-                style={{
-                  paddingHorizontal: 24,
-                  paddingVertical: 12,
-                  borderRadius: 25,
-                  minWidth: 80,
-                  backgroundColor: buttonConfig.backgroundColor,
-                  opacity: buttonConfig.disabled ? 0.7 : 1
-                }}
-                onPress={() => !buttonConfig.disabled && handleJoinEvent(event.id)}
-              >
-                <ClustrText style={{
-                  fontSize: 14,
-                  fontWeight: '600',
-                  color: buttonConfig.textColor
-                }}>
-                  {buttonConfig.text}
-                </ClustrText>
-              </ClustrButton>
-            )
-          })()}
-        </View>
-      </ClustrCard>
-      </Pressable>
-    )
-  }
+  // EventCard moved to components/cards/EventCard.js
 
   const CategoryButton = ({ category, isSelected }) => (
     <Pressable
@@ -758,7 +367,14 @@ export const DashboardScreen = ({ onLogout, user }) => {
             </View>
           ) : filteredEvents.length > 0 ? (
             filteredEvents.map(event => (
-              <EventCard key={event.id} event={event} />
+              <EventCard 
+                key={event.id} 
+                event={event} 
+                onPress={openEventModal}
+                onJoinEvent={joinEvent}
+                user={user}
+                isJoining={joiningEvents.has(event.id)}
+              />
             ))
           ) : (
             <View style={{
@@ -796,10 +412,10 @@ export const DashboardScreen = ({ onLogout, user }) => {
       {/* Event Details Modal */}
       <EventDetailsModal
         visible={showEventModal}
-        onClose={handleCloseModal}
+        onClose={closeEventModal}
         event={selectedEvent}
-        onJoinEvent={handleJoinEvent}
-        onLeaveEvent={handleLeaveEvent}
+        onJoinEvent={joinEvent}
+        onLeaveEvent={leaveEvent}
         user={user}
         isJoining={selectedEvent ? joiningEvents.has(selectedEvent.id) : false}
       />
