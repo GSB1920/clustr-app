@@ -9,12 +9,14 @@ import {
   TextInput,
   FlatList,
   SafeAreaView,
-  Alert
+  Alert,
+  Modal
 } from 'react-native'
 import { useClustrTheme } from '../theme/ClustrTheme'
 import { ClustrText, ClustrButton, ClustrCard } from '../components/ui'
 import { EventDetailsModal } from '../components/modals/EventDetailsModal'
 import { EventCard } from '../components/cards/EventCard'
+import { ChatScreen } from './ChatScreen'
 import { useEventStore } from '../stores/useEventStore'
 import { CATEGORIES } from '../constants/categories'
 
@@ -109,6 +111,7 @@ export const DashboardScreen = ({ onLogout, user }) => {
     searchQuery,
     selectedEvent,
     showEventModal,
+    showChatModal,
     joiningEvents,
     setSelectedCategory,
     setSearchQuery,
@@ -116,7 +119,9 @@ export const DashboardScreen = ({ onLogout, user }) => {
     joinEvent,
     leaveEvent,
     openEventModal,
-    closeEventModal
+    closeEventModal,
+    openChatModal,
+    closeChatModal
   } = useEventStore()
   
   // Keep only animations (these stay local)
@@ -416,9 +421,25 @@ export const DashboardScreen = ({ onLogout, user }) => {
         event={selectedEvent}
         onJoinEvent={joinEvent}
         onLeaveEvent={leaveEvent}
+        onOpenChat={openChatModal}
         user={user}
         isJoining={selectedEvent ? joiningEvents.has(selectedEvent.id) : false}
       />
+      
+      {/* Chat Modal - Full Screen */}
+      <Modal
+        visible={showChatModal}
+        animationType="slide"
+        presentationStyle="fullScreen"
+      >
+        {selectedEvent && (
+          <ChatScreen
+            event={selectedEvent}
+            user={user}
+            onClose={closeChatModal}
+          />
+        )}
+      </Modal>
     </SafeAreaView>
   )
 }
