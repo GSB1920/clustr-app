@@ -1,14 +1,14 @@
 import { Platform } from 'react-native'
 
-// Update with your NEW ngrok URL
-const NGROK_URL = 'https://daa6fa6b3b0e.ngrok-free.app'
+// Production Railway API URL
+const RAILWAY_URL = 'https://renewed-wisdom-production.up.railway.app'
 
 const getAPIBaseURL = () => {
   if (__DEV__) {
-    // Use ngrok for all platforms to test Google OAuth
-    return `${NGROK_URL}/api`
+    // Use Railway production API for all platforms
+    return `${RAILWAY_URL}/api`
   }
-  return `${NGROK_URL}/api`
+  return `${RAILWAY_URL}/api`
 }
 
 const API_BASE_URL = getAPIBaseURL()

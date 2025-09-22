@@ -4,5 +4,6 @@ import os
 app = create_app()
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5001))  # Changed from 5000 to 5001
-    app.run(host='0.0.0.0', port=port, debug=True)
+    port = int(os.environ.get('PORT', 5001))
+    print(f"🚀 Starting Flask app on port {port}")
+    app.run(host='0.0.0.0', port=port, debug=False)  # Set debug=False for production

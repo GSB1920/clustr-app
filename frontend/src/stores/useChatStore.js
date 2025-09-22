@@ -39,9 +39,9 @@ const chatAPI = {
 }
 
 // API configuration (matching main API service)
-const NGROK_URL = 'https://daa6fa6b3b0e.ngrok-free.app'
-const API_BASE_URL = `${NGROK_URL}/api`
-const SOCKET_URL = NGROK_URL // For Socket.IO connection
+const RAILWAY_URL = 'https://renewed-wisdom-production.up.railway.app'
+const API_BASE_URL = `${RAILWAY_URL}/api`
+const SOCKET_URL = RAILWAY_URL // For Socket.IO connection
 
 export const useChatStore = create((set, get) => ({
   // Chat state
