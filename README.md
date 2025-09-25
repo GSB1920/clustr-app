@@ -11,7 +11,7 @@
 ## 🚀 Tech Stack
 
 - **Frontend:** React Native (Expo)
-- **Backend:** Python (FastAPI)
+- **Backend:** Python (Flask)
 - **Database:** SQLLite
 - **Real-Time Communication:** Socket.IO
 
