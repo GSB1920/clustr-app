@@ -3,6 +3,7 @@
 > **A React Native mobile application for discovering and joining local micro-community events**
 
 🚀 **LIVE PRODUCTION DEMO**: WIP
+<br>
 🚀 **LIVE MOCK-UPs**: https://precisionapply.my.canva.site/clustr-v1
 
 Screenshots : 
