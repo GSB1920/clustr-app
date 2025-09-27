@@ -2,7 +2,9 @@
 
 > **A React Native mobile application for discovering and joining local micro-community events**
 
-🚀 **LIVE PRODUCTION DEMO**: [https://clustr-api.railway.app](https://clustr-api.railway.app)
+🚀 **LIVE PRODUCTION DEMO**: WIP
+🚀 **LIVE MOCK-UPs**: https://precisionapply.my.canva.site/clustr-v1
+
 
 [![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactnative.dev/)
 [![Flask](https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
