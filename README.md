@@ -5,6 +5,48 @@
 🚀 **LIVE PRODUCTION DEMO**: WIP
 🚀 **LIVE MOCK-UPs**: https://precisionapply.my.canva.site/clustr-v1
 
+Screenshots : 
+<div align="center">
+  <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 100%;">
+    <!-- Screenshot 1 -->
+    <a href="https://github.com/user-attachments/assets/ecbdc666-bfcd-460e-8f7b-c65108c9a314" target="_blank" style="flex: 0 0 auto;">
+      <img src="https://github.com/user-attachments/assets/ecbdc666-bfcd-460e-8f7b-c65108c9a314" 
+           alt="Screenshot 1" 
+           style="width: 150px; height: auto; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; transition: transform 0.2s;"
+           onmouseover="this.style.transform='scale(1.05)'" 
+           onmouseout="this.style.transform='scale(1)'">
+    </a>
+    <a href="https://github.com/user-attachments/assets/7f3d29e6-1b5c-4746-a8f9-0666fa86f3c6" target="_blank" style="flex: 0 0 auto;">
+      <img src="https://github.com/user-attachments/assets/7f3d29e6-1b5c-4746-a8f9-0666fa86f3c6" 
+           alt="Screenshot 2" 
+           style="width: 150px; height: auto; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; transition: transform 0.2s;"
+           onmouseover="this.style.transform='scale(1.05)'" 
+           onmouseout="this.style.transform='scale(1)'">
+    </a>
+    <a href="https://github.com/user-attachments/assets/db4b1d30-399d-482b-8256-cce01c08156e" target="_blank" style="flex: 0 0 auto;">
+      <img src="https://github.com/user-attachments/assets/db4b1d30-399d-482b-8256-cce01c08156e" 
+           alt="Screenshot 3" 
+           style="width: 150px; height: auto; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; transition: transform 0.2s;"
+           onmouseover="this.style.transform='scale(1.05)'" 
+           onmouseout="this.style.transform='scale(1)'">
+    </a>
+    <a href="https://github.com/user-attachments/assets/d2e45e61-be62-49e5-84bd-948b573bc6a2" target="_blank" style="flex: 0 0 auto;">
+      <img src="https://github.com/user-attachments/assets/d2e45e61-be62-49e5-84bd-948b573bc6a2" 
+           alt="Screenshot 4" 
+           style="width: 150px; height: auto; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; transition: transform 0.2s;"
+           onmouseover="this.style.transform='scale(1.05)'" 
+           onmouseout="this.style.transform='scale(1)'">
+    </a>
+    <a href="https://github.com/user-attachments/assets/c4d4a1ae-8b14-4505-a55f-dc8743d5b9df" target="_blank" style="flex: 0 0 auto;">
+      <img src="https://github.com/user-attachments/assets/c4d4a1ae-8b14-4505-a55f-dc8743d5b9df" 
+           alt="Screenshot 5" 
+           style="width: 150px; height: auto; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; transition: transform 0.2s;"
+           onmouseover="this.style.transform='scale(1.05)'" 
+           onmouseout="this.style.transform='scale(1)'">
+    </a>
+  </div>
+</div>
+
 
 [![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactnative.dev/)
 [![Flask](https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
